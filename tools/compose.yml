@@ -1,0 +1,7 @@
+services:
+  example-model:
+    build:
+      context: .
+    container_name: example-model
+    networks:
+      - goldmine-network
