@@ -2,6 +2,12 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
+# shared code
+COPY goldmine/ /app/goldmine/
+
+# tool code
+COPY tools/phenotagger/ /app/tools/phenotagger/
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
@@ -9,12 +15,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     make \
     openjdk-17-jdk
 
-COPY PhenoTagger/ ./PhenoTagger
-RUN pip install --no-cache-dir -r PhenoTagger/requirements.txt
+RUN uv sync --frozen --package example-model
 RUN python -m nltk.downloader punkt averaged_perceptron_tagger wordnet
 
 # Copy any other files
 
-WORKDIR /app
-ENV PYTHONPATH="${PYTHONPATH}:/app/PhenoTagger/src"
+ENV PYTHONPATH="${PYTHONPATH}:/app:/app/PhenoTagger/src"
 CMD ["python", "PhenoTagger_tagging.py", "-i", "../example/input/", "-o", "../example/output"]
