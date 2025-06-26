@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN uv sync --frozen --package example-model
 RUN python -m nltk.downloader punkt averaged_perceptron_tagger wordnet
 
-# Copy any other files
+EXPOSE 8000
 
 ENV PYTHONPATH="${PYTHONPATH}:/app:/app/PhenoTagger/src"
-CMD ["python", "PhenoTagger_tagging.py", "-i", "../example/input/", "-o", "../example/output"]
+CMD ["uv", "run", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
