@@ -9,7 +9,6 @@ class PhenotypeMatch(BaseModel):
     # name: str = Field(..., description="Name of the phenotype")
     # matched_text: str = Field(..., description="Text that matched the phenotype")
 
-
 class ToolState(str, Enum):
     READY = "ready"
     BUSY = "busy"
@@ -25,6 +24,7 @@ class ToolInput(BaseModel):
 
 class ToolOutput(BaseModel):
     results: List[List[PhenotypeMatch]] = Field(..., description="List of of phenotype matches for each sentence")
+    processing_time: float = Field(0, description="Time taken to process the input in seconds")
 
 class ToolInfo(BaseModel):
     """Information about a tool"""
@@ -48,6 +48,7 @@ class LoadResponse(BaseModel):
     """Response from model load operation"""
     state: ToolState = Field(..., description="Current state of the tool after loading")
     loading_time: Optional[float] = Field(None, description="Time taken to load in seconds")
+    message: Optional[str] = Field(None, description="Optional message providing additional information about the load operation")
 
 class ToolDiscoveryInfo(BaseModel):
     """Information discovered about a tool from compose.yml, handled by backend not the tool itself"""
