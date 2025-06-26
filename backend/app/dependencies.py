@@ -5,6 +5,7 @@ from .services.tool_service import ToolService
 # and shared across all requests.
 tool_service = ToolService()
 
+
 def get_tool_service() -> ToolService:
     """FastAPI dependency to get the shared ToolService instance."""
     return tool_service

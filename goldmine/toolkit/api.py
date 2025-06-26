@@ -1,20 +1,20 @@
 from fastapi import FastAPI, HTTPException
-from typing import List
-import time
 
 from goldmine.toolkit.interface import ModelInterface
-from ..types import ToolInput, ToolOutput, ToolInfo, ToolResponse, ToolStatus, LoadResponse
+
+from ..types import LoadResponse, ToolInfo, ToolInput, ToolResponse, ToolStatus
+
 
 def create_app(model_implementation: ModelInterface):
     """
     Creates a standard FastAPI application for a model tool.
     This acts as the web layer, handling HTTP requests and responses.
     """
-    
+
     app = FastAPI(
         title="Phenotype Identification Tool API",
         description="Standard API for phenotype identification tool containers",
-        version="1.0.0"
+        version="1.0.0",
     )
 
     @app.get("/status", response_model=ToolStatus)
@@ -38,7 +38,9 @@ def create_app(model_implementation: ModelInterface):
         except HTTPException as e:
             raise e
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"An unexpected error occurred during loading: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"An unexpected error occurred during loading: {str(e)}"
+            )
 
     @app.post("/unload")
     async def unload_model():
@@ -46,7 +48,9 @@ def create_app(model_implementation: ModelInterface):
         try:
             return await model_implementation.unload()
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"An unexpected error occurred during unloading: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"An unexpected error occurred during unloading: {str(e)}"
+            )
 
     @app.post("/predict", response_model=ToolResponse)
     async def predict(input_data: ToolInput) -> ToolResponse:
@@ -60,6 +64,8 @@ def create_app(model_implementation: ModelInterface):
         except HTTPException as e:
             raise e
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"An unexpected error occurred during prediction: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"An unexpected error occurred during prediction: {str(e)}"
+            )
 
     return app

@@ -1,7 +1,17 @@
 from abc import ABC, abstractmethod
-from typing import List
 from goldmine.types import ToolInput, ToolOutput, ToolInfo, ToolStatus, LoadResponse, ToolState, ToolResponse
 import time
+from goldmine.types import (
+    LoadResponse,
+    ToolInfo,
+    ToolInput,
+    ToolOutput,
+    ToolResponse,
+    ToolState,
+    ToolStatus,
+)
+
+
 class ModelInterface(ABC):
     """
     Abstract base class for all phenotype identification model containers.
@@ -24,7 +34,7 @@ class ModelInterface(ABC):
     async def _unload_model(self):
         """
         Unload the model from memory.
-        
+
         """
         pass
 
@@ -57,7 +67,11 @@ class ModelInterface(ABC):
             await self._load_model()
             self.model_loaded = True
             self.state = ToolState.READY
-            return LoadResponse(state=self.state, loading_time=time.time() - start_time, message="Model loaded successfully")
+            return LoadResponse(
+                state=self.state,
+                loading_time=time.time() - start_time,
+                message="Model loaded successfully",
+            )
         except Exception as e:
             self.state = ToolState.ERROR
             self.error_message = str(e)
@@ -95,10 +109,9 @@ class ModelInterface(ABC):
         Public method to get tool status, used by the API layer.
         """
         return ToolStatus(
-            state=self.state,
-            message=self.error_message if self.error_message else None
+            state=self.state, message=self.error_message if self.error_message else None
         )
-    
+
     def get_info(self) -> ToolInfo:
         """
         Public method to get tool info, used by the API layer.
