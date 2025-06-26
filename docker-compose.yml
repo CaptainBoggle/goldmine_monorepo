@@ -8,6 +8,8 @@ services:
       - "3000:3000"
     networks:
       - goldmine-network
+    depends_on:
+      - backend
 
   backend:
     build:
