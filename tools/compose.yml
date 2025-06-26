@@ -1,7 +1,16 @@
 services:
   example-model:
     build:
-      context: .
+      context: ..
+      dockerfile: tools/example_model/Dockerfile
     container_name: example-model
     networks:
       - goldmine-network
+    ports:
+      - "6000:8000"  # each model needs its own port for access outside the container
+      # To the other services, this will be accessible at http://example-model:8000/
+      # but from the host, it will be at http://localhost:6000/
+
+    # Additional tools need to be added here
+    # ensure the external port is unique
+    # e.g. if you add another model, use "6001:8000"

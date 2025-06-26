@@ -1,0 +1,10 @@
+[project]
+name = "example-model"
+version = "0.1.0"
+dependencies = [
+    "goldmine",
+    "torch>=2.0.0",
+]
+
+[tool.uv.sources]
+goldmine = { path = "../../goldmine" }
