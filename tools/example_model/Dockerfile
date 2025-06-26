@@ -2,16 +2,22 @@ FROM ghcr.io/astral-sh/uv:python3.13-bookworm
 
 WORKDIR /app
 
-# Copy the goldmine package
+# deps
+COPY goldmine/pyproject.toml /app/goldmine/pyproject.toml
+COPY tools/example_model/pyproject.toml /app/tools/example_model/pyproject.toml
+COPY tools/example_model/uv.lock /app/tools/example_model/uv.lock
+
+# shared code
 COPY goldmine/ /app/goldmine/
 
-# Copy the example_model tool directory (includes its own uv.lock)
-COPY tools/example_model/ /app/tools/example_model/
-
+# the tool source
 WORKDIR /app/tools/example_model
 
-# Sync only the current package (example-model) dependencies
 RUN uv sync --frozen --package example-model
+
+# Copy the tool source
+COPY tools/example_model/app.py /app/tools/example_model/app.py
+COPY tools/example_model/tool.py /app/tools/example_model/tool.py
 
 EXPOSE 8000
 
