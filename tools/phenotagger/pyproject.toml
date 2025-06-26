@@ -1,9 +1,20 @@
 [project]
 name = "phenotagger"
 version = "0.1.0"
-requires-python = ">=3.13"
+requires-python = "==3.11.6"
 dependencies = [
-    "goldmine"
+    "bioc==2.0.post5",
+    "bllipparser==2021.11.7",
+    "docopt==0.6.2",
+    "goldmine",
+    "jpype1==0.6.3",
+    "networkx==3.1",
+    "nltk==3.8.1",
+    "ply==3.11",
+    "pystanforddependencies==0.3.1",
+    "tensorflow==2.12.0",
+    "torch==1.13.0",
+    "transformers==4.30.1",
 ]
 
 [tool.uv.sources]
