@@ -10,6 +10,7 @@ docker compose up
 - Backend API: http://localhost:8000
 - PostgreSQL: http://localhost:5432
 - Example Model: http://localhost:6000
+- PhenoTagger Model: http://localhost:6000
 
 ## Development
 
