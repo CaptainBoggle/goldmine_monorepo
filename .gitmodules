@@ -1,0 +1,3 @@
+[submodule "tools/phenotagger/externals/PhenoTagger"]
+	path = tools/phenotagger/externals/PhenoTagger
+	url = https://github.com/ncbi-nlp/PhenoTagger.git
