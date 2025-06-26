@@ -10,7 +10,9 @@ services:
       - goldmine-network
 
   backend:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
       - "8000:8000"
     environment:
@@ -18,9 +20,7 @@ services:
     depends_on:
       - database
     networks:
-      - goldmine-network
-    volumes:
-      - ./models:/app/models:ro
+      - goldmine-network    
 
   database:
     image: postgres
