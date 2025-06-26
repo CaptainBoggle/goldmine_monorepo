@@ -1,5 +1,5 @@
 # Ignore postgres data directory
-.data
+.data/
 
 # Ignore Python cache files
 __pycache__/
