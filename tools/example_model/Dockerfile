@@ -2,13 +2,9 @@ FROM ghcr.io/astral-sh/uv:python3.13-bookworm
 
 WORKDIR /app
 
-# deps
-COPY goldmine/pyproject.toml /app/goldmine/pyproject.toml
+COPY goldmine/ /app/goldmine/
 COPY tools/example_model/pyproject.toml /app/tools/example_model/pyproject.toml
 COPY tools/example_model/uv.lock /app/tools/example_model/uv.lock
-
-# shared code
-COPY goldmine/ /app/goldmine/
 
 # the tool source
 WORKDIR /app/tools/example_model
