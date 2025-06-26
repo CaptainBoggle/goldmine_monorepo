@@ -1,0 +1,14 @@
+[project]
+name = "goldmine-backend"
+version = "0.1.0"
+description = "Goldmine backend service"
+dependencies = [
+    "goldmine",
+    "httpx>=0.24.0",
+    "pyyaml>=6.0",
+    "psycopg2-binary>=2.9.0",
+    "sqlalchemy>=2.0.0"
+]
+
+[tool.uv.sources]
+goldmine = { workspace = true }
