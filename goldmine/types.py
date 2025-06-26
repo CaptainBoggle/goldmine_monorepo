@@ -24,8 +24,9 @@ class ToolInput(BaseModel):
 
 class ToolOutput(BaseModel):
     results: List[List[PhenotypeMatch]] = Field(..., description="List of of phenotype matches for each sentence")
-    processing_time: float = Field(0, description="Time taken to process the input in seconds")
 
+class ToolResponse(ToolOutput):
+    processing_time: Optional[float] = Field(None, description="Time taken to process the input in seconds")
 class ToolInfo(BaseModel):
     """Information about a tool"""
     name: str = Field(..., description="Name of the tool")
