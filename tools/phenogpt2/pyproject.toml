@@ -1,0 +1,22 @@
+[project]
+name = "phenogpt2"
+version = "0.1.0"
+requires-python = "==3.11.6"
+
+dependencies = [
+    "torch==2.1.2", 
+    "transformers==4.38.2",
+    "datasets",
+    "evaluate",
+    "sacrebleu",
+    "protobuf",
+    "sentencepiece",
+    "einops",
+    "accelerate",
+    "deepspeed",
+    "xformers", 
+    "goldmine",
+]
+
+[tool.uv.sources]
+goldmine = { path = "../../goldmine" }
