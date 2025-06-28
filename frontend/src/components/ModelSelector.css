@@ -1,0 +1,13 @@
+/* ModelSelector Component Styles */
+
+.model-selector-container {
+  @apply w-full;
+}
+
+.model-selector-label {
+  @apply block font-semibold mb-1;
+}
+
+.model-selector-select {
+  @apply w-full border rounded px-4 py-2;
+} 
