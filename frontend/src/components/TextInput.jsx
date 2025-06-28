@@ -1,9 +1,11 @@
+import './TextInput.css';
+
 function TextInput({ input, setInput }) {
   return (
-    <div>
-      <label className="block font-semibold mb-1">Text Input:</label>
+    <div className="text-input-container">
+      <label className="text-input-label">Text Input:</label>
       <textarea
-        className="w-full border rounded px-4 py-2"
+        className="text-input-field"
         rows={3}
         value={input}
         onChange={e => setInput(e.target.value)}

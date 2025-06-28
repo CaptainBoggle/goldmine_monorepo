@@ -1,15 +1,15 @@
+import './ModelOutput.css';
+
 function ModelOutput({ loading, result }) {
   return (
-    <div>
-      <label className="block font-semibold mb-1">Model Output:</label>
+    <div className="model-output-container">
+      <label className="model-output-label">Model Output:</label>
       
-      {loading && <div className="text-gray-500">loading...</div>}
+      {loading && <div className="model-output-loading">loading...</div>}
       
       {result && (
         <div>
-          <pre className="bg-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap">
-            {result}
-          </pre>
+          <pre className="model-output-result">{result}</pre>
         </div>
       )}
     </div>

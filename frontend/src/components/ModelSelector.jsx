@@ -1,9 +1,11 @@
+import './ModelSelector.css';
+
 function ModelSelector({ tools, selectedTool, setSelectedTool }) {
   return (
-    <div>
-      <label className="block font-semibold mb-1">Model:</label>
+    <div className="model-selector-container">
+      <label className="model-selector-label">Model:</label>
       <select
-        className="w-full border rounded px-4 py-2"
+        className="model-selector-select"
         value={selectedTool}
         onChange={e => setSelectedTool(e.target.value)}
       >

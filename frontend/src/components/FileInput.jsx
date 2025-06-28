@@ -1,14 +1,16 @@
+import './FileInput.css';
+
 function FileInput() {
   return (
-    <div>
-      <label className="block font-semibold mb-1">File:</label>
-      <div className="flex gap-2">
+    <div className="file-input-container">
+      <label className="file-input-label">File:</label>
+      <div className="file-input-wrapper">
         <input
-          className="flex-1 border rounded px-4 py-2"
+          className="file-input-field"
           placeholder="sample.json"
           disabled
         />
-        <button className="px-3 py-2 rounded bg-black text-white text-lg">+</button>
+        <button className="file-input-button">+</button>
       </div>
     </div>
   );
