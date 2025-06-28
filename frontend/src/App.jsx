@@ -37,23 +37,27 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-white p-8 font-sans">
-      <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+        <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {activeTab === 'Inference' && (
-        <InferencePage
-          tools={tools}
-          selectedTool={selectedTool}
-          setSelectedTool={setSelectedTool}
-          callApi={callApi}
-          loading={loading}
-          result={result}
-        />
-      )}
+        <main className="mt-6 sm:mt-8 lg:mt-12">
+          {activeTab === 'Inference' && (
+            <InferencePage
+              tools={tools}
+              selectedTool={selectedTool}
+              setSelectedTool={setSelectedTool}
+              callApi={callApi}
+              loading={loading}
+              result={result}
+            />
+          )}
 
-      {activeTab === 'Performance' && <PerformancePage />}
+          {activeTab === 'Performance' && <PerformancePage />}
 
-      {activeTab === 'About' && <AboutPage />}
+          {activeTab === 'About' && <AboutPage />}
+        </main>
+      </div>
     </div>
   );
 }
