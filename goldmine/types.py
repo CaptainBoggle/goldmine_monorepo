@@ -2,15 +2,20 @@ from enum import Enum
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
+import re
+from pydantic import field_validator
 
 
 class PhenotypeMatch(BaseModel):
     # HPO id
-    id: str = Field(..., description="HPO ID of the phenotype")
-    # TODO: not sure which fields we want here
-    # name: str = Field(..., description="Name of the phenotype")
-    # matched_text: str = Field(..., description="Text that matched the phenotype")
+    id: str = Field(..., description="HPO ID of the phenotype (must be CURIE format, e.g., 'HP:0000001')")
 
+    @field_validator("id")
+    @classmethod
+    def validate_hpo_id(cls, v):
+        if not re.match(r"^HP:[0-9]+$", v):
+            raise ValueError("id must be in CURIE format (e.g., 'HP:0000001')")
+        return v
 
 class ToolState(str, Enum):
     READY = "ready"
