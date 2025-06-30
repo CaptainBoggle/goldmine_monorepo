@@ -1,8 +1,6 @@
 import asyncio
 import logging
 
-import compat
-
 from goldmine.toolkit.interface import ModelInterface
 from goldmine.types import PhenotypeMatch, ToolInfo, ToolInput, ToolOutput
 
