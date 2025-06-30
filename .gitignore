@@ -1,0 +1,15 @@
+# Ignore postgres data directory
+.data/
+
+# Ignore Python cache files
+__pycache__/
+
+# Ignore virtual environment directories
+.venv
+
+# Ignore macos stuff
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes

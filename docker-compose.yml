@@ -1,0 +1,41 @@
+include:
+  - path: ./tools/compose.yml
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - goldmine-network
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@database:5432/postgres
+    depends_on:
+      - database
+    networks:
+      - goldmine-network    
+
+  database:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./.data/postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - goldmine-network
+
+networks:
+  goldmine-network:
+    driver: bridge
+
