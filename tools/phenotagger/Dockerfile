@@ -2,11 +2,9 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# shared code
 COPY goldmine/ /app/goldmine/
-
-# tool code
-COPY tools/phenotagger/ /app/tools/phenotagger/
+COPY tools/phenotagger/pyproject.toml /app/tools/phenotagger/pyproject.toml
+COPY tools/phenotagger/uv.lock /app/tools/phenotagger/uv.lock
 
 WORKDIR /app/tools/phenotagger
 
@@ -21,6 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install uv swig
 RUN uv sync --frozen --package phenotagger
 RUN uv run python -m nltk.downloader punkt averaged_perceptron_tagger wordnet
+
+COPY tools/phenotagger/ /app/tools/phenotagger/
 
 EXPOSE 8000
 
