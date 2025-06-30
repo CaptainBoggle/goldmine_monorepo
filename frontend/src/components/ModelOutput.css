@@ -1,0 +1,17 @@
+/* ModelOutput Component Styles */
+
+.model-output-container {
+  @apply w-full;
+}
+
+.model-output-label {
+  @apply block font-semibold mb-1;
+}
+
+.model-output-loading {
+  @apply text-gray-500;
+}
+
+.model-output-result {
+  @apply bg-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap;
+} 

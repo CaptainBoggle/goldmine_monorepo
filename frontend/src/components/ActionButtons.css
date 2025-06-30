@@ -1,0 +1,25 @@
+/* ActionButtons Component Styles */
+
+.action-buttons-container {
+  @apply flex flex-wrap gap-3;
+}
+
+.action-button {
+  @apply px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 transition-all duration-300 ease-in-out transform hover:scale-105;
+}
+
+.action-button-status {
+  @apply hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700;
+}
+
+.action-button-info {
+  @apply hover:bg-green-50 hover:border-green-300 hover:text-green-700;
+}
+
+.action-button-load {
+  @apply hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700;
+}
+
+.action-button-unload {
+  @apply hover:bg-orange-50 hover:border-orange-300 hover:text-orange-700;
+} 

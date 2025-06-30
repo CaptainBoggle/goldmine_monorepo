@@ -1,0 +1,45 @@
+/* InferencePage Styles */
+
+.inference-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.inference-grid {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12;
+}
+
+.inference-left, .inference-right {
+  @apply space-y-6;
+}
+
+.inference-card {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+}
+
+.inference-section-title {
+  @apply text-xl font-semibold text-gray-900 mb-6;
+}
+
+.inference-toggle-row {
+  @apply relative bg-gray-100 rounded-lg p-1 flex flex-col sm:flex-row;
+}
+
+.inference-toggle-btn {
+  @apply flex-1 py-3 px-4 rounded-md text-sm font-medium transition-all duration-200 ease-in-out;
+}
+
+.inference-toggle-btn-active {
+  @apply bg-white text-gray-900 shadow-sm;
+}
+
+.inference-toggle-btn-inactive {
+  @apply text-gray-600 hover:text-gray-900;
+}
+
+.inference-run-btn {
+  @apply w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium text-sm sm:text-base disabled:bg-gray-400 disabled:cursor-not-allowed;
+}
+
+.inference-input-anim {
+  @apply transition-all duration-300 ease-in-out;
+} 

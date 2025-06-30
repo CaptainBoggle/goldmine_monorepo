@@ -13,3 +13,5 @@ __pycache__/
 ._*
 .Spotlight-V100
 .Trashes
+
+/frontend/node_modules/

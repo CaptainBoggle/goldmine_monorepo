@@ -1,0 +1,13 @@
+/* TextInput Component Styles */
+
+.text-input-container {
+  @apply w-full;
+}
+
+.text-input-label {
+  @apply block font-semibold mb-1;
+}
+
+.text-input-field {
+  @apply w-full border rounded px-4 py-2;
+} 

@@ -1,0 +1,69 @@
+/* PerformancePage Styles */
+
+.performance-container {
+  @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+}
+
+.performance-title {
+  @apply text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-8;
+}
+
+.performance-section-list {
+  @apply space-y-8;
+}
+
+.performance-card {
+  @apply bg-white rounded-lg shadow-sm p-6;
+}
+
+.performance-section-title {
+  @apply text-xl font-semibold text-gray-900 mb-4;
+}
+
+.performance-section-text {
+  @apply text-gray-700 leading-relaxed;
+}
+
+.performance-metrics-grid {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4;
+}
+
+.performance-metric {
+  @apply rounded-lg p-4 text-center;
+}
+
+.performance-metric-accuracy {
+  @apply bg-blue-50;
+}
+
+.performance-metric-precision {
+  @apply bg-green-50;
+}
+
+.performance-metric-recall {
+  @apply bg-purple-50;
+}
+
+.performance-metric-f1 {
+  @apply bg-orange-50;
+}
+
+.performance-metric-value {
+  @apply text-2xl font-bold;
+}
+
+.performance-metric-label {
+  @apply text-sm text-gray-600;
+}
+
+.performance-checklist {
+  @apply space-y-2 text-gray-700;
+}
+
+.performance-checkitem {
+  @apply flex items-start;
+}
+
+.performance-checkmark {
+  @apply text-green-500 mr-2;
+} 
