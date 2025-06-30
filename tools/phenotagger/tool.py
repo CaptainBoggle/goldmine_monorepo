@@ -75,8 +75,8 @@ class PhenoTaggerModelImplementation(ModelInterface):
 
             for an in annotations:
                 match = PhenotypeMatch(
-                    id=an[2]
-                    #name=sentence.lower()[int(an[0]):an(an[1])]
+                    id=an[2],
+                    match_text=sentence.lower()[int(an[0]):an(an[1])]
                 )
                 sentence_matches.append(match)
             results.append(sentence_matches)
