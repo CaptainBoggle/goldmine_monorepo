@@ -33,8 +33,9 @@ class ToolService:
                         # Check for duplicate external ports
                         if tool_info.external_port in external_ports_used:
                             raise ValueError(
-                                f"Duplicate external port {tool_info.external_port} found in services "
-                                f"'{external_ports_used[tool_info.external_port]}' and '{service_name}'"
+                                f"Duplicate external port {tool_info.external_port} found "
+                                f"'{external_ports_used[tool_info.external_port]}' and "
+                                f"'{service_name}'"
                             )
                         external_ports_used[tool_info.external_port] = service_name
                         self._discovered_tools.append(tool_info)

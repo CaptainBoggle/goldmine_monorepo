@@ -1,6 +1,6 @@
-from abc import ABC, abstractmethod
-from goldmine.types import ToolInput, ToolOutput, ToolInfo, ToolStatus, LoadResponse, ToolState, ToolResponse, UnloadResponse
 import time
+from abc import ABC, abstractmethod
+
 from goldmine.types import (
     LoadResponse,
     ToolInfo,
@@ -9,6 +9,7 @@ from goldmine.types import (
     ToolResponse,
     ToolState,
     ToolStatus,
+    UnloadResponse,
 )
 
 
@@ -85,7 +86,9 @@ class ModelInterface(ABC):
             return UnloadResponse(state=self.state, message="Model already unloaded")
 
         if self.state != ToolState.READY:
-            return UnloadResponse(state=self.state, message="Model can only be unloaded in READY state")
+            return UnloadResponse(
+                state=self.state, message="Model can only be unloaded in READY state"
+            )
 
         try:
             self.model_loaded = False
@@ -104,13 +107,13 @@ class ModelInterface(ABC):
         """
         if not self.model_loaded:
             raise RuntimeError("Model must be loaded before prediction")
-        
+
         # TODO: should we allow predictions while busy?
         # If the model is busy, we could either queue the request or reject it.
         # Rejecting for now
         if self.state == ToolState.BUSY:
             raise RuntimeError("Model is currently busy, please try again later")
-            
+
         start_time = time.time()
         try:
             output = await self._predict(input_data)

@@ -64,10 +64,7 @@ class ExampleModelImplementation(ModelInterface):
             # Simple keyword matching (in a real model, this would be much more sophisticated)
             for term, hpo_id in phenotype_mappings.items():
                 if term in sentence_lower:
-                    match = PhenotypeMatch(
-                        id=hpo_id,
-                        match_text=term
-                    )
+                    match = PhenotypeMatch(id=hpo_id, match_text=term)
                     sentence_matches.append(match)
 
             results.append(sentence_matches)
