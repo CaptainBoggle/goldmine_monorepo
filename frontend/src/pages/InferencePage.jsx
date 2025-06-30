@@ -5,6 +5,34 @@ import './InferencePage.css';
 function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading, result }) {
   const [input, setInput] = useState('Patient has fever and seizures');
   const [inputMode, setInputMode] = useState('text'); // 'text' or 'file'
+  const [fileContent, setFileContent] = useState('');
+  const [fileName, setFileName] = useState('');
+
+  const handleFileSelect = (content, name) => {
+    setFileContent(content);
+    setFileName(name);
+  };
+
+  const handleRunAnalysis = () => {
+    let dataToSend;
+    
+    if (inputMode === 'file') {
+      if (!fileContent.trim()) {
+        alert('Please select a file first.');
+        return;
+      }
+      
+      dataToSend = {
+        sentences: fileContent.split('\n').filter(s => s.trim())
+      };
+    } else {
+      dataToSend = {
+        sentences: input.split('\n').filter(s => s.trim())
+      };
+    }
+
+    callApi('/predict', 'POST', dataToSend);
+  };
 
   return (
     <div className="inference-container">
@@ -46,7 +74,7 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
             <h2 className="inference-section-title">Input Data</h2>
             <div className="inference-input-anim">
               {inputMode === 'file' ? (
-                <FileInput />
+                <FileInput onFileSelect={handleFileSelect} />
               ) : (
                 <TextInput 
                   input={input} 
@@ -58,12 +86,8 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
           <div className="inference-card">
             <button
               className="inference-run-btn"
-              onClick={() =>
-                callApi('/predict', 'POST', {
-                  sentences: input.split('\n').filter(s => s.trim()),
-                })
-              }
-              disabled={!input.trim()}
+              onClick={handleRunAnalysis}
+              disabled={inputMode === 'text' ? !input.trim() : !fileContent.trim()}
             >
               {loading ? 'Processing...' : 'Run Analysis'}
             </button>
