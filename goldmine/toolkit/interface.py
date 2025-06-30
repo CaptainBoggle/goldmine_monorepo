@@ -102,10 +102,15 @@ class ModelInterface(ABC):
         """
         Public method to run prediction, used by the API layer.
         """
-        # TODO: Should we load automatically, or throw an error if not loaded?
-        # Also, if we load automatically, should we automatically unload after prediction?
         if not self.model_loaded:
-            await self.load()
+            raise RuntimeError("Model must be loaded before prediction")
+        
+        # TODO: should we allow predictions while busy?
+        # If the model is busy, we could either queue the request or reject it.
+        # Rejecting for now
+        if self.state == ToolState.BUSY:
+            raise RuntimeError("Model is currently busy, please try again later")
+            
         start_time = time.time()
         try:
             output = await self._predict(input_data)
