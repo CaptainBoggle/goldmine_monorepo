@@ -7,3 +7,6 @@
 [submodule "tools/phenotagger/externals/biobert-base-cased-v1.2"]
 	path = tools/phenotagger/externals/biobert-base-cased-v1.2
 	url = https://huggingface.co/dmis-lab/biobert-base-cased-v1.2
+[submodule "tools/phenobert/externals/PhenoBERT"]
+	path = tools/phenobert/externals/PhenoBERT
+	url = https://github.com/EclipseCN/PhenoBERT.git

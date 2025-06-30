@@ -21,6 +21,12 @@ services:
     ports:
       - "6001:8000"
 
-    # Additional tools need to be added here
-    # ensure the external port is unique
-    # e.g. if you add another model, use "6002:8000"
+  phenobert:
+    build:
+      context: ..
+      dockerfile: tools/phenobert/Dockerfile
+    container_name: phenobert
+    networks:
+      - goldmine-network
+    ports:
+      - "6003:8000"
