@@ -17,6 +17,7 @@ class PhenotypeMatch(BaseModel):
             raise ValueError("id must be in CURIE format (e.g., 'HP:0000001')")
         return v
 
+    match_text: Optional[str] = Field(..., description="Text that matched the phenotype")
 class ToolState(str, Enum):
     READY = "ready"
     BUSY = "busy"

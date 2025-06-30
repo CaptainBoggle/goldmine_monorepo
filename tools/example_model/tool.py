@@ -66,7 +66,7 @@ class ExampleModelImplementation(ModelInterface):
                 if term in sentence_lower:
                     match = PhenotypeMatch(
                         id=hpo_id,
-                        # Add other fields if they exist in your PhenotypeMatch model
+                        match_text=term
                     )
                     sentence_matches.append(match)
 
