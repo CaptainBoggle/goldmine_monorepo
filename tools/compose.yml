@@ -11,6 +11,16 @@ services:
       # To the other services, this will be accessible at http://example-model:8000/
       # but from the host, it will be at http://localhost:6000/
 
+  phenotagger:
+    build:
+      context: ..
+      dockerfile: tools/phenotagger/Dockerfile
+    container_name: phenotagger
+    networks:
+      - goldmine-network
+    ports:
+      - "6001:8000"
+
     # Additional tools need to be added here
     # ensure the external port is unique
-    # e.g. if you add another model, use "6001:8000"
+    # e.g. if you add another model, use "6002:8000"
