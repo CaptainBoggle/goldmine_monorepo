@@ -4,12 +4,6 @@
 [submodule "tools/phenotagger/externals/PhenoTagger_weights"]
 	path = tools/phenotagger/externals/PhenoTagger_weights
 	url = https://huggingface.co/lingbionlp/PhenoTagger_v1.2
-[submodule "tools/phenotagger/externals/bioformer-cased-v1.0"]
-	path = tools/phenotagger/externals/bioformer-cased-v1.0
-	url = https://huggingface.co/bioformers/bioformer-8L
-[submodule "tools/phenotagger/externals/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext"]
-	path = tools/phenotagger/externals/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext
-	url = https://huggingface.co/microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext
 [submodule "tools/phenotagger/externals/biobert-base-cased-v1.2"]
 	path = tools/phenotagger/externals/biobert-base-cased-v1.2
 	url = https://huggingface.co/dmis-lab/biobert-base-cased-v1.2

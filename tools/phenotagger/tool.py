@@ -25,7 +25,7 @@ class PhenoTaggerModelImplementation(ModelInterface):
         logger.info("Loading PhenoTagger phenotype identification model...")
 
         # TODO: Properly model_type functionality
-        model_type = "bioformer"
+        model_type = "biobert"
         if model_type =='cnn':
             vocabfiles={'w2vfile':'externals/PhenoTagger_weights/bio_embedding_intrinsic.d200',   
                         'charfile':'externals/PhenoTagger/dict/char.vocab',
