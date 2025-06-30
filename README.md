@@ -10,9 +10,17 @@ docker compose up
 - Backend API: http://localhost:8000
 - PostgreSQL: http://localhost:5432
 - Example Model: http://localhost:6000
-- PhenoTagger Model: http://localhost:6000
+- PhenoTagger Model: http://localhost:6001
 
 ## Development
+First, ensure git and git-lfs are installed. The latter is required for cloning large model weight files.
+
+Clone repo and submodules:
+```
+git clone https://github.com/unsw-cse-comp99-3900/capstone-project-3900-t18a-date.git
+cd capstone-project-3900-t18a-date
+git submodule update --init --recursive
+```
 
 ## Adding New Tools
 1. Create tool directory in `tools/`
