@@ -67,13 +67,21 @@ class ToolStatus(BaseModel):
 class LoadResponse(BaseModel):
     """Response from model load operation"""
 
-    state: ToolState = Field(..., description="Current state of the tool after loading")
-    loading_time: Optional[float] = Field(None, description="Time taken to load in seconds")
+    state: ToolState = Field(..., description="Current state of the tool after load request")
+    loading_time: float = Field(0, description="Time taken to load in seconds")
     message: Optional[str] = Field(
         None,
         description="Optional message providing additional information about the load operation",
     )
 
+class UnloadResponse(BaseModel):
+    """Response from model unload operation"""
+
+    state: ToolState = Field(..., description="Current state of the tool after unload request")
+    message: Optional[str] = Field(
+        None,
+        description="Optional message providing additional information about the unload operation",
+    )
 
 class ToolDiscoveryInfo(BaseModel):
     """Information discovered about a tool from compose.yml, handled by backend not the tool itself"""

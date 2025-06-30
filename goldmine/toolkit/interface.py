@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from goldmine.types import ToolInput, ToolOutput, ToolInfo, ToolStatus, LoadResponse, ToolState, ToolResponse
+from goldmine.types import ToolInput, ToolOutput, ToolInfo, ToolStatus, LoadResponse, ToolState, ToolResponse, UnloadResponse
 import time
 from goldmine.types import (
     LoadResponse,
@@ -60,7 +60,7 @@ class ModelInterface(ABC):
         Public method to load the model, used by the API layer.
         """
         if self.model_loaded:
-            return LoadResponse(state=self.state, message="Model already loaded", loading_time=None)
+            return LoadResponse(state=self.state, message="Model already loaded", loading_time=0)
         try:
             self.state = ToolState.LOADING
             start_time = time.time()
@@ -77,14 +77,26 @@ class ModelInterface(ABC):
             self.error_message = str(e)
             raise
 
-    async def unload(self):
+    async def unload(self) -> UnloadResponse:
         """
         Public method to unload the model, used by the API layer.
         """
-        self.model_loaded = False
-        self.state = ToolState.UNLOADING
-        await self._unload_model()
-        self.state = ToolState.UNLOADED
+        if not self.model_loaded:
+            return UnloadResponse(state=self.state, message="Model already unloaded")
+
+        if self.state != ToolState.READY:
+            return UnloadResponse(state=self.state, message="Model can only be unloaded in READY state")
+
+        try:
+            self.model_loaded = False
+            self.state = ToolState.UNLOADING
+            await self._unload_model()
+            self.state = ToolState.UNLOADED
+            return UnloadResponse(state=self.state, message="Model unloaded successfully")
+        except Exception as e:
+            self.state = ToolState.ERROR
+            self.error_message = str(e)
+            return UnloadResponse(state=self.state, message=self.error_message)
 
     async def predict(self, input_data: ToolInput) -> ToolResponse:
         """
