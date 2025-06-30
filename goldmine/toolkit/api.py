@@ -12,8 +12,8 @@ def create_app(model_implementation: ModelInterface):
     """
 
     app = FastAPI(
-        title="Phenotype Identification Tool API",
-        description="Standard API for phenotype identification tool containers",
+        title="Goldmine Tool API",
+        description="Standard API for Goldmine tool containers",
         version="1.0.0",
     )
 

@@ -3,10 +3,10 @@ import './AboutPage.css';
 function AboutPage() {
   return (
     <div className="about-container">
-      <h1 className="about-title">About Phenotype ID</h1>
+      <h1 className="about-title">About Goldmine</h1>
       <div className="about-section-list">
         <div className="about-card">
-          <h2 className="about-section-title">What is Phenotype ID?</h2>
+          <h2 className="about-section-title">What is Goldmine?</h2>
           <p className="about-section-text"></p>
         </div>
         <div className="about-card">

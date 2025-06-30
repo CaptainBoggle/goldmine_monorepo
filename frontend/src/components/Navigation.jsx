@@ -5,7 +5,7 @@ function Navigation({ activeTab, setActiveTab }) {
   
   return (
     <div className="nav-container">
-      <h1 className="nav-title">Phenotype ID</h1>
+      <h1 className="nav-title">Goldmine</h1>
       <div className="nav-tabs-wrapper">
         <div className="nav-tabs-container">
           {/* Left spacing - 10% */}
