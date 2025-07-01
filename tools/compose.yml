@@ -21,6 +21,16 @@ services:
     ports:
       - "6001:8000"
 
+  gpt2:
+    build:
+      context: ..
+      dockerfile: tools/gpt2/Dockerfile
+    container_name: gpt2
+    networks:
+      - goldmine-network
+    ports:
+      - "6002:8000"
+
   phenobert:
     build:
       context: ..
