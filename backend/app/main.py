@@ -9,8 +9,6 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Initialize the tool service
-tool_service = ToolService()
 
 # Include routers
 app.include_router(tools.router, prefix="/tools", tags=["tools"])
