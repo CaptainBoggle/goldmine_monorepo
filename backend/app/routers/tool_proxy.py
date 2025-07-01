@@ -39,7 +39,7 @@ async def load_tool(tool_id: str, tool_service: ToolService = Depends(get_tool_s
     if not tool:
         raise HTTPException(status_code=404, detail=f"Tool '{tool_id}' not found")
 
-    return await _proxy_post_request(tool.endpoint, "/load", {})
+    return await _proxy_post_request(tool.endpoint, "/load", {}, timeout=90.0)
 
 
 @router.post("/{tool_id}/unload")
@@ -61,17 +61,17 @@ async def predict_with_tool(
     if not tool:
         raise HTTPException(status_code=404, detail=f"Tool '{tool_id}' not found")
 
-    return await _proxy_post_request(tool.endpoint, "/predict", input_data.dict())
+    return await _proxy_post_request(tool.endpoint, "/predict", input_data.dict(), timeout=120.0)
 
 
 # Helper functions for making HTTP requests
-async def _proxy_get_request(base_url: str, endpoint: str) -> Dict[str, Any]:
+async def _proxy_get_request(base_url: str, endpoint: str, timeout: float = 60.0) -> Dict[str, Any]:
     """Make a GET request to a tool endpoint"""
     url = f"{base_url}{endpoint}"
 
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(url, timeout=30.0)
+            response = await client.get(url, timeout=timeout)
             response.raise_for_status()
             return response.json()
         except httpx.RequestError as e:
@@ -82,13 +82,13 @@ async def _proxy_get_request(base_url: str, endpoint: str) -> Dict[str, Any]:
             )
 
 
-async def _proxy_post_request(base_url: str, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
+async def _proxy_post_request(base_url: str, endpoint: str, data: Dict[str, Any], timeout: float = 30.0) -> Dict[str, Any]:
     """Make a POST request to a tool endpoint"""
     url = f"{base_url}{endpoint}"
 
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.post(url, json=data, timeout=30.0)
+            response = await client.post(url, json=data, timeout=timeout)
             response.raise_for_status()
             return response.json()
         except httpx.RequestError as e:
