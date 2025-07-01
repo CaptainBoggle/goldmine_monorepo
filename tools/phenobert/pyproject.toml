@@ -1,0 +1,17 @@
+[project]
+name = "phenobert"
+version = "0.1.0"
+requires-python = ">=3.11.6"
+dependencies = [
+    "fasttext>=0.9.2",
+    "goldmine",
+    "nltk>=3.5",
+    "numpy<2.0.0",
+    "prettytable>=1.0.1",
+    "scipy>=1.5.2",
+    "stanza>=1.1.1",
+    "torch==2.0.1"
+]
+
+[tool.uv.sources]
+goldmine = { path = "../../goldmine" }

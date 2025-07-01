@@ -28,6 +28,7 @@ class ToolService:
 
             if "services" in compose_data:
                 for service_name, service_config in compose_data["services"].items():
+                    print(f"Discovered service: {service_name}")
                     tool_info = self._parse_service_to_tool_info(service_name, service_config)
                     if tool_info:
                         # Check for duplicate external ports
