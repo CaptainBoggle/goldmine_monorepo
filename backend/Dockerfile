@@ -17,6 +17,9 @@ COPY backend/app/ /app/backend/app/
 # Copy the tools/compose.yml for tool discovery
 COPY tools/compose.yml /app/tools/compose.yml
 
+# Copy corpora directory to the container
+COPY corpora/ /app/corpora/
+
 EXPOSE 8000
 
 ENV PYTHONPATH=/app
