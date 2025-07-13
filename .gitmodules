@@ -10,3 +10,6 @@
 [submodule "tools/phenobert/externals/PhenoBERT"]
 	path = tools/phenobert/externals/PhenoBERT
 	url = https://github.com/EclipseCN/PhenoBERT.git
+[submodule "corpora/gold_corpus/externals"]
+	path = corpora/gold_corpus/externals
+	url = https://github.com/azankl/phenotypeCR_eval.git
