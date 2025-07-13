@@ -20,7 +20,6 @@ class PhenotypeMatch(BaseModel):
 
     match_text: Optional[str] = Field("", description="Text that matched the phenotype")
 
-
 class ToolState(str, Enum):
     READY = "ready"
     BUSY = "busy"
@@ -29,8 +28,8 @@ class ToolState(str, Enum):
     ERROR = "error"
     UNLOADED = "unloaded"
 
-
 class ToolInput(BaseModel):
+    """Base class for tool input"""
     sentences: List[str] = Field(..., description="List of sentences to be processed by the tool")
     # TODO: do we bother with parameters?
     # parameters: Dict[str, Any] = Field(
@@ -39,12 +38,14 @@ class ToolInput(BaseModel):
 
 
 class ToolOutput(BaseModel):
+    """Base class for tool output"""
     results: List[List[PhenotypeMatch]] = Field(
         ..., description="List of of phenotype matches for each sentence"
     )
 
 
 class ToolResponse(ToolOutput):
+    """Response from the tool"""
     processing_time: Optional[float] = Field(
         None, description="Time taken to process the input in seconds"
     )
@@ -111,3 +112,37 @@ class ToolDiscoveryInfo(BaseModel):
 # TODO: do we want this?
 # class BatchPredictionRequest(BaseModel):
 # class BatchPredictionResponse(BaseModel):
+
+class CorpusDocument(BaseModel):
+    '''Base class for corpus entries'''
+    # each entry is an annotated document
+    # each entry contains an input and output object
+    id: str = Field(..., description="Unique identifier for the document")
+    annotator: str = Field("Unknown", description="Name of the annotator")
+
+    input: ToolInput = Field(..., description="Input object for the document")
+    output: ToolOutput = Field(..., description="Output object for the document")
+
+    @field_validator("output")
+    @classmethod
+    def validate_output_length(cls, v, values):
+        input_sentences = values.get("input", {}).get("sentences", [])
+        if len(input_sentences) != len(v.results):
+            raise ValueError(
+                "The number of input sentences must match the number of output results"
+            )
+        return v
+
+class Corpus(BaseModel):
+    '''Base class for a corpus'''
+    # each corpus is a collection of entries
+    # each corpus contains an input and output object
+    name: str = Field(..., description="Name of the corpus")
+    description: Optional[str] = Field(None, description="Description of the corpus")
+    # TODO: enforce format of hpo_version?
+    hpo_version: str = Field(..., description="Version of the HPO ontology used") 
+    entries: CorpusDocument = Field(
+        ..., description="List of corpus entries, each containing an input and output object"
+    )
+
+
