@@ -2,10 +2,12 @@ import re
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from sqlmodel import SQLModel, Field, Relationship, Column
+from sqlalchemy import JSON
+from pydantic import field_validator, computed_field
 
 
-class PhenotypeMatch(BaseModel):
+class PhenotypeMatch(SQLModel):
     # HPO id
     id: str = Field(
         ..., description="HPO ID of the phenotype (must be CURIE format, e.g., 'HP:0000001')"
@@ -28,7 +30,7 @@ class ToolState(str, Enum):
     ERROR = "error"
     UNLOADED = "unloaded"
 
-class ToolInput(BaseModel):
+class ToolInput(SQLModel):
     """Base class for tool input"""
     sentences: List[str] = Field(..., description="List of sentences to be processed by the tool")
     # TODO: do we bother with parameters?
@@ -37,7 +39,7 @@ class ToolInput(BaseModel):
     # )
 
 
-class ToolOutput(BaseModel):
+class ToolOutput(SQLModel):
     """Base class for tool output"""
     results: List[List[PhenotypeMatch]] = Field(
         ..., description="List of of phenotype matches for each sentence"
@@ -51,7 +53,7 @@ class ToolResponse(ToolOutput):
     )
 
 
-class ToolInfo(BaseModel):
+class ToolInfo(SQLModel):
     """Information about a tool"""
 
     name: str = Field(..., description="Name of the tool")
@@ -64,7 +66,7 @@ class ToolInfo(BaseModel):
     # )
 
 
-class ToolStatus(BaseModel):
+class ToolStatus(SQLModel):
     """Status of a tool"""
 
     state: ToolState = Field(..., description="Current state of the tool")
@@ -78,7 +80,7 @@ class ToolStatus(BaseModel):
     # gpu_usage: Optional[int] = Field(None, description="Current GPU usage %")
 
 
-class LoadResponse(BaseModel):
+class LoadResponse(SQLModel):
     """Response from model load operation"""
 
     state: ToolState = Field(..., description="Current state of the tool after load request")
@@ -89,7 +91,7 @@ class LoadResponse(BaseModel):
     )
 
 
-class UnloadResponse(BaseModel):
+class UnloadResponse(SQLModel):
     """Response from model unload operation"""
 
     state: ToolState = Field(..., description="Current state of the tool after unload request")
@@ -99,7 +101,7 @@ class UnloadResponse(BaseModel):
     )
 
 
-class ToolDiscoveryInfo(BaseModel):
+class ToolDiscoveryInfo(SQLModel):
     """Tool information discovered from compose.yml, handled by backend not the tool itself"""
 
     id: str = Field(..., description="Tool identifier")
@@ -113,36 +115,121 @@ class ToolDiscoveryInfo(BaseModel):
 # class BatchPredictionRequest(BaseModel):
 # class BatchPredictionResponse(BaseModel):
 
-class CorpusDocument(BaseModel):
-    '''Base class for corpus entries'''
-    # each entry is an annotated document
+class CorpusDocument(SQLModel, table=True):
+    """Base class for corpus entries"""
     # each entry contains an input and output object
-    id: str = Field(..., description="Unique identifier for the document")
+    
+    # Database fields
+    db_id: Optional[int] = Field(default=None, primary_key=True, description="Database ID")
+    corpus_id: Optional[int] = Field(default=None, foreign_key="corpus.db_id", description="Foreign key to corpus")
+    
+    name: str = Field(..., description="Name of the document")
     annotator: str = Field("Unknown", description="Name of the annotator")
-
-    input: ToolInput = Field(..., description="Input object for the document")
-    output: ToolOutput = Field(..., description="Output object for the document")
-
-    @field_validator("output")
-    @classmethod
-    def validate_output_length(cls, v, values):
-        input_sentences = values.get("input", {}).get("sentences", [])
-        if len(input_sentences) != len(v.results):
-            raise ValueError(
-                "The number of input sentences must match the number of output results"
-            )
-        return v
-
-class Corpus(BaseModel):
+    
+    # Store the complex objects as JSON in the database
+    input_internal: dict = Field(
+        default_factory=dict, 
+        sa_column=Column(JSON), 
+        description="Serialised ToolInput",
+        exclude=True  # Hide from API responses
+    )
+    output_internal: dict = Field(
+        default_factory=dict, 
+        sa_column=Column(JSON), 
+        description="Serialised ToolOutput",
+        exclude=True  # Hide from API responses
+    )
+    
+    corpus: Optional["Corpus"] = Relationship(back_populates="entries")
+    
+    def __init__(
+        self, 
+        *,
+        db_id: Optional[int] = None,
+        corpus_id: Optional[int] = None,
+        name: str,
+        annotator: str = "Unknown",
+        input: Optional[ToolInput] = None,
+        output: Optional[ToolOutput] = None,
+        input_internal: Optional[dict] = None,
+        output_internal: Optional[dict] = None,
+        **kwargs
+    ):
+        """
+        Initialise CorpusDocument with either ToolInput/ToolOutput objects or raw data.
+        
+        Args:
+            input: ToolInput object (will be serialised to input_internal)
+            output: ToolOutput object (will be serialised to output_internal)
+            input_internal: Raw dict data (for database loading)
+            output_internal: Raw dict data (for database loading)
+        """
+        # Call parent init with database fields
+        super().__init__(
+            db_id=db_id,
+            corpus_id=corpus_id,
+            name=name,
+            annotator=annotator,
+            input_internal=input_internal or {},
+            output_internal=output_internal or {},
+            **kwargs
+        )
+        
+        # If ToolInput/ToolOutput objects were passed, serialise them
+        if input is not None:
+            self.input = input
+        if output is not None:
+            self.output = output
+    
+    # Properties to access ToolInput and ToolOutput directly
+    @computed_field
+    @property
+    def input(self) -> ToolInput:
+        """Get the ToolInput object"""
+        if not self.input_internal:
+            return ToolInput(sentences=[])
+        return ToolInput.model_validate(self.input_internal)
+    
+    @input.setter
+    def input(self, value: ToolInput):
+        """Set the ToolInput object"""
+        self.input_internal = value.model_dump()
+    
+    @computed_field
+    @property
+    def output(self) -> ToolOutput:
+        """Get the ToolOutput object"""
+        if not self.output_internal:
+            return ToolOutput(results=[])
+        # Convert dict back to PhenotypeMatch objects
+        results = []
+        for sentence_results in self.output_internal.get("results", []):
+            sentence_matches = [
+                PhenotypeMatch.model_validate(match) for match in sentence_results
+            ]
+            results.append(sentence_matches)
+        return ToolOutput(results=results)
+    
+    @output.setter
+    def output(self, value: ToolOutput):
+        """Set the ToolOutput object"""
+        # Convert PhenotypeMatch objects to dicts for JSON storage
+        results = []
+        for sentence_results in value.results:
+            sentence_dicts = [match.model_dump() for match in sentence_results]
+            results.append(sentence_dicts)
+        self.output_internal = {"results": results}
+    
+class Corpus(SQLModel, table=True):
     '''Base class for a corpus'''
-    # each corpus is a collection of entries
-    # each corpus contains an input and output object
+    db_id: Optional[int] = Field(default=None, primary_key=True, description="Database ID")
+    
     name: str = Field(..., description="Name of the corpus")
     description: Optional[str] = Field(None, description="Description of the corpus")
     # TODO: enforce format of hpo_version?
     hpo_version: str = Field(..., description="Version of the HPO ontology used") 
-    entries: CorpusDocument = Field(
-        ..., description="List of corpus entries, each containing an input and output object"
+    corpus_version: str = Field(
+        "1.0", description="Version of the corpus format, for future compatibility"
     )
-
-
+    
+    entries: List[CorpusDocument] = Relationship(back_populates="corpus")
