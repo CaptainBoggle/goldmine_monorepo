@@ -2,7 +2,15 @@ from fastapi import FastAPI, HTTPException
 
 from goldmine.toolkit.interface import ModelInterface
 
-from ..types import LoadResponse, ToolInfo, ToolInput, ToolResponse, ToolStatus
+from ..types import (
+    ExternalRecommenderPredictRequest,
+    ExternalRecommenderPredictResponse,
+    LoadResponse,
+    ToolInfo,
+    ToolInput,
+    ToolResponse,
+    ToolStatus,
+)
 
 
 def create_app(model_implementation: ModelInterface):
@@ -66,6 +74,34 @@ def create_app(model_implementation: ModelInterface):
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"An unexpected error occurred during prediction: {str(e)}"
+            )
+
+    @app.post("/external-recommender/predict")
+    async def external_recommender_predict(
+        request: ExternalRecommenderPredictRequest,
+    ) -> ExternalRecommenderPredictResponse:
+        """
+        INCEpTION External Recommender API endpoint.
+        This endpoint follows the INCEpTION specification for external recommenders.
+        """
+        try:
+            # TODO: Implement the logic to handle the external recommender request
+            # see https://inception-project.github.io/releases/37.1/docs/developer-guide.html#_external_recommender
+            # Use https://github.com/dkpro/dkpro-cassis for deserialising/serialising
+
+            # Basically we need to take the request, process it into our standard format,
+            # get the predictions, then convert those into the expected XMI format
+
+            annotated_xmi = ""
+
+            return ExternalRecommenderPredictResponse(document=annotated_xmi)
+
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"An unexpected error occurred in external recommender: {str(e)}"
             )
 
     return app
