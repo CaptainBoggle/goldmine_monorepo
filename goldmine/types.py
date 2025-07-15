@@ -247,3 +247,9 @@ class Corpus(SQLModel, table=True):
     def document_count(self) -> int:
         """Get the number of documents in this corpus"""
         return len(self.entries)
+
+    @computed_field
+    @property
+    def total_annotations(self) -> int:
+        """Get the total number of annotations across all documents in this corpus"""
+        return sum(doc.annotation_count for doc in self.entries)
