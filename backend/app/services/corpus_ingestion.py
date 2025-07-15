@@ -100,6 +100,11 @@ class CorpusIngestionService:
         
         # Get version from the parser
         version = parser.get_version()
+
+        # Ensure the version isn't literally "latest" as that is a reserved keyword
+        if version == "latest":
+            print(f"Corpus {corpus_name} has version 'latest', which is reserved! Skipping ingestion.")
+            return False
         
         # Check if already ingested
         if self.is_corpus_ingested(corpus_name, version):
