@@ -3,7 +3,7 @@ import { ModelSelector, FileInput, TextInput, ActionButtons, ModelOutput } from 
 import './InferencePage.css';
 
 function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading, result }) {
-  const [input, setInput] = useState('Patient has fever and seizures');
+  const [input, setInput] = useState('The last child is a 6-year-old boy. At 36 weeks 3D ultrasonography showed telecanthus, short nose, long philtrum and short femur (Fig. 3A).');
   const [inputMode, setInputMode] = useState('text'); // 'text' or 'file'
   const [fileContent, setFileContent] = useState('');
   const [fileName, setFileName] = useState('');
