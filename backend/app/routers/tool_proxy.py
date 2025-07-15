@@ -76,19 +76,25 @@ async def batch_predict_with_tool(
 
     return await _proxy_post_request(tool.endpoint, "/batch_predict", input_data.dict(), timeout=600.0)  # 10 minutes
 
-
-@router.post("/{tool_id}/external-recommender/predict", response_model=ExternalRecommenderPredictResponse)
-async def external_recommender_predict(
-    tool_id: str, request: ExternalRecommenderPredictRequest, tool_service: ToolService = Depends(get_tool_service)
-):
-    """Make a prediction using an external recommender tool"""
+@router.post("/{tool_id}/external-recommender/predict")
+async def predict_with_external_recommender(
+    tool_id: str,
+    request: ExternalRecommenderPredictRequest,
+    tool_service: ToolService = Depends(get_tool_service)
+) -> ExternalRecommenderPredictResponse:
+    """Make a prediction using INCEpTION external recommender API format"""
     tool = tool_service.get_tool_by_name(tool_id)
     if not tool:
         raise HTTPException(status_code=404, detail=f"Tool '{tool_id}' not found")
 
-    response = await _proxy_post_request(tool.endpoint, "/external-recommender/predict", request.dict())
-    
-    return ExternalRecommenderPredictResponse(**response)
+    # Forward the external recommender request directly to the tool
+    internal_response = await _proxy_post_request(
+        tool.endpoint, "/external-recommender/predict", request.dict(), timeout=120.0
+    )
+
+    # Return the response directly from the tool
+    return ExternalRecommenderPredictResponse(document=internal_response.get("document", ""))
+
 
 # Helper functions for making HTTP requests
 async def _proxy_get_request(base_url: str, endpoint: str, timeout: float = 60.0) -> Dict[str, Any]:
@@ -108,7 +114,9 @@ async def _proxy_get_request(base_url: str, endpoint: str, timeout: float = 60.0
             )
 
 
-async def _proxy_post_request(base_url: str, endpoint: str, data: Dict[str, Any], timeout: float = 30.0) -> Dict[str, Any]:
+async def _proxy_post_request(
+    base_url: str, endpoint: str, data: Dict[str, Any], timeout: float = 30.0
+) -> Dict[str, Any]:
     """Make a POST request to a tool endpoint"""
     url = f"{base_url}{endpoint}"
 
