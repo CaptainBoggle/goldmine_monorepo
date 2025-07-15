@@ -221,6 +221,12 @@ class CorpusDocument(SQLModel, table=True):
             results.append(sentence_dicts)
         self.output_internal = {"results": results}
 
+    @computed_field
+    @property
+    def annotation_count(self) -> int:
+        """Get the number of annotations in this document"""
+        return sum(len(sentence_annotations) for sentence_annotations in self.output.results)
+
 class Corpus(SQLModel, table=True):
     '''Base class for a corpus'''
     db_id: Optional[int] = Field(default=None, primary_key=True, description="Database ID")
@@ -234,3 +240,10 @@ class Corpus(SQLModel, table=True):
     )
 
     entries: List[CorpusDocument] = Relationship(back_populates="corpus", cascade_delete=True)
+
+    # auto generated field to track number of documents
+    @computed_field
+    @property
+    def document_count(self) -> int:
+        """Get the number of documents in this corpus"""
+        return len(self.entries)
