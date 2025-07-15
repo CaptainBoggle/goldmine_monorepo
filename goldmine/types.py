@@ -2,9 +2,9 @@ import re
 from enum import Enum
 from typing import List, Optional
 
-from sqlmodel import SQLModel, Field, Relationship, Column
+from pydantic import computed_field, field_validator
 from sqlalchemy import JSON
-from pydantic import field_validator, computed_field
+from sqlmodel import Column, Field, Relationship, SQLModel
 
 
 class PhenotypeMatch(SQLModel):
@@ -118,32 +118,34 @@ class ToolDiscoveryInfo(SQLModel):
 class CorpusDocument(SQLModel, table=True):
     """Base class for corpus entries"""
     # each entry contains an input and output object
-    
+
     # Database fields
     db_id: Optional[int] = Field(default=None, primary_key=True, description="Database ID")
-    corpus_id: Optional[int] = Field(default=None, foreign_key="corpus.db_id", description="Foreign key to corpus")
-    
-    name: str = Field(..., description="Name of the document")
+    corpus_id: Optional[int] = Field(
+        default=None, foreign_key="corpus.db_id", description="Foreign key to corpus", index=True
+        )
+
+    name: str = Field(..., description="Name of the document", index=True)
     annotator: str = Field("Unknown", description="Name of the annotator")
-    
+
     # Store the complex objects as JSON in the database
     input_internal: dict = Field(
-        default_factory=dict, 
-        sa_column=Column(JSON), 
+        default_factory=dict,
+        sa_column=Column(JSON),
         description="Serialised ToolInput",
         exclude=True  # Hide from API responses
     )
     output_internal: dict = Field(
-        default_factory=dict, 
-        sa_column=Column(JSON), 
+        default_factory=dict,
+        sa_column=Column(JSON),
         description="Serialised ToolOutput",
         exclude=True  # Hide from API responses
     )
-    
+
     corpus: Optional["Corpus"] = Relationship(back_populates="entries")
-    
+
     def __init__(
-        self, 
+        self,
         *,
         db_id: Optional[int] = None,
         corpus_id: Optional[int] = None,
@@ -157,7 +159,6 @@ class CorpusDocument(SQLModel, table=True):
     ):
         """
         Initialise CorpusDocument with either ToolInput/ToolOutput objects or raw data.
-        
         Args:
             input: ToolInput object (will be serialised to input_internal)
             output: ToolOutput object (will be serialised to output_internal)
@@ -174,13 +175,13 @@ class CorpusDocument(SQLModel, table=True):
             output_internal=output_internal or {},
             **kwargs
         )
-        
+
         # If ToolInput/ToolOutput objects were passed, serialise them
         if input is not None:
             self.input = input
         if output is not None:
             self.output = output
-    
+
     # Properties to access ToolInput and ToolOutput directly
     @computed_field
     @property
@@ -189,12 +190,12 @@ class CorpusDocument(SQLModel, table=True):
         if not self.input_internal:
             return ToolInput(sentences=[])
         return ToolInput.model_validate(self.input_internal)
-    
+
     @input.setter
     def input(self, value: ToolInput):
         """Set the ToolInput object"""
         self.input_internal = value.model_dump()
-    
+
     @computed_field
     @property
     def output(self) -> ToolOutput:
@@ -209,7 +210,7 @@ class CorpusDocument(SQLModel, table=True):
             ]
             results.append(sentence_matches)
         return ToolOutput(results=results)
-    
+
     @output.setter
     def output(self, value: ToolOutput):
         """Set the ToolOutput object"""
@@ -219,17 +220,17 @@ class CorpusDocument(SQLModel, table=True):
             sentence_dicts = [match.model_dump() for match in sentence_results]
             results.append(sentence_dicts)
         self.output_internal = {"results": results}
-    
+
 class Corpus(SQLModel, table=True):
     '''Base class for a corpus'''
     db_id: Optional[int] = Field(default=None, primary_key=True, description="Database ID")
-    
-    name: str = Field(..., description="Name of the corpus")
+
+    name: str = Field(..., description="Name of the corpus", index=True)
     description: Optional[str] = Field(None, description="Description of the corpus")
     # TODO: enforce format of hpo_version?
-    hpo_version: str = Field(..., description="Version of the HPO ontology used") 
+    hpo_version: str = Field(..., description="Version of the HPO ontology used")
     corpus_version: str = Field(
-        "1.0", description="Version of the corpus format, for future compatibility"
+        "1.0", description="Version of the corpus format, for future compatibility", index=True
     )
-    
-    entries: List[CorpusDocument] = Relationship(back_populates="corpus")
+
+    entries: List[CorpusDocument] = Relationship(back_populates="corpus", cascade_delete=True)
