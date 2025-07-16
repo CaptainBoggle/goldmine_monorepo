@@ -7,6 +7,7 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
   const [inputMode, setInputMode] = useState('text'); // 'text' or 'file'
   const [fileContent, setFileContent] = useState('');
   const [fileName, setFileName] = useState('');
+  const [lastAnalyzedText, setLastAnalyzedText] = useState('');
 
   const handleFileSelect = (content, name) => {
     setFileContent(content);
@@ -15,6 +16,7 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
 
   const handleRunAnalysis = () => {
     let dataToSend;
+    let textToAnalyze;
     
     if (inputMode === 'file') {
       if (!fileContent.trim()) {
@@ -25,12 +27,14 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
       dataToSend = {
         sentences: fileContent.split('\n').filter(s => s.trim())
       };
+      textToAnalyze = fileContent;
     } else {
       dataToSend = {
         sentences: input.split('\n').filter(s => s.trim())
       };
+      textToAnalyze = input;
     }
-
+    setLastAnalyzedText(textToAnalyze);
     callApi('/predict', 'POST', dataToSend);
   };
 
@@ -101,7 +105,11 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
           </div>
           <div className="inference-card">
             <h2 className="inference-section-title">Analysis Results</h2>
-            <ModelOutput loading={loading} result={result} />
+            <ModelOutput 
+              loading={loading} 
+              result={result} 
+              originalText={lastAnalyzedText}
+            />
           </div>
         </div>
       </div>
