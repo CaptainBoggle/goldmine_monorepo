@@ -36,7 +36,46 @@ function ModelOutput({ loading, result, originalText }) {
     }
   }, [hpoDetails, fetching]);
 
-  
+  // Annotate text with spans for each match
+  function annotateText(text, matches) {
+    if (!text || !matches.length) return text;
+    // Sort matches by length descending to avoid nested replacements
+    const sorted = [...matches].sort((a, b) => b.match_text.length - a.match_text.length);
+    let annotated = text;
+    // To avoid replacing inside already-annotated spans, we tokenize
+    let tokens = [annotated];
+    sorted.forEach(({ match_text, id }) => {
+      const nextTokens = [];
+      tokens.forEach(token => {
+        if (typeof token !== 'string') {
+          nextTokens.push(token);
+          return;
+        }
+        const parts = token.split(match_text);
+        for (let i = 0; i < parts.length; i++) {
+          if (parts[i]) nextTokens.push(parts[i]);
+          if (i < parts.length - 1) {
+            nextTokens.push({ match_text, id });
+          }
+        }
+      });
+      tokens = nextTokens;
+    });
+    return tokens;
+  }
+
+  // Render annotated text with tooltips
+  function renderAnnotated(tokens) {
+    return tokens.map((token, i) => {
+      if (typeof token === 'string') return token;
+      const { match_text, id } = token;
+      const details = hpoDetails[id];
+      const isValid = details?.valid;
+      const color = isValid === false ? '#f87171' : isValid === true ? '#4ade80' : '#facc15';
+      // const color = isValid === true ? '#4ade80' : '#f87171';
+      
+    });
+  }
 
   let content;
   if (loading) {
