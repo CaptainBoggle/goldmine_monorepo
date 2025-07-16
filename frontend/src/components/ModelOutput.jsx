@@ -73,7 +73,47 @@ function ModelOutput({ loading, result, originalText }) {
       const isValid = details?.valid;
       const color = isValid === false ? '#f87171' : isValid === true ? '#4ade80' : '#facc15';
       // const color = isValid === true ? '#4ade80' : '#f87171';
-      
+      return (
+        <Tooltip
+          key={i}
+          title={
+            fetching[id] ? (
+              <CircularProgress size={20} />
+            ) : isValid === true ? (
+              <div>
+                <div><b>{details.id}: {details.name}</b></div>
+                <div style={{ margin: '4px 0' }}>
+                <b>Definition:</b> {details.definition}
+                </div>
+                {details.synonyms && details.synonyms.length > 0 && (
+                  <div>
+                    <b>Synonyms:</b> {details.synonyms.join(', ')}
+                  </div>
+                )}
+              </div>
+            ) : isValid === false ? (
+              <span style={{ color: '#f87171' }}>Invalid HPO ID</span>
+            ) : (
+              'Loading...'
+            )
+          }
+          arrow
+          placement="top"
+          onOpen={() => fetchHpo(id)}
+        >
+          <span
+            style={{
+              background: color,
+              borderRadius: 4,
+              padding: '0 2px',
+              cursor: 'pointer',
+              transition: 'background 0.2s',
+            }}
+          >
+            {match_text}
+          </span>
+        </Tooltip>
+      );
     });
   }
 
