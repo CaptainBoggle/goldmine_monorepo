@@ -93,13 +93,17 @@ function ModelOutput({ loading, result, originalText }) {
               <CircularProgress size={20} />
             ) : isValid === true ? (
               <div>
-                <div><b>{details.id}: {details.name}</b></div>
-                <div style={{ margin: '4px 0' }}>
-                <b>Definition:</b> {details.definition}
-                </div>
+                <div style={{ color: '#888', fontSize: 13, marginBottom: 2 }}>{details.id}</div>
+                <div style={{ fontWeight: 'bold', color: '#111', fontSize: 18, marginBottom: 6 }}>{details.name}</div>
+                <div style={{ color: '#888', fontSize: 13, marginBottom: 2 }}> {details.definition}</div>
                 {details.synonyms && details.synonyms.length > 0 && (
-                  <div>
-                    <b>Synonyms:</b> {details.synonyms.join(', ')}
+                  <div style={{ color: '#888', fontSize: 13 }}>
+                    <span style={{ color: '#444', fontWeight: 'bold', fontSize: 14 }}>Synonym:</span>
+                    <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {details.synonyms.map((syn, idx) => (
+                        <span key={idx} style={{ background: '#eee', color: '#555', borderRadius: 4, padding: '2px 6px', fontSize: 12, marginRight: 4, marginBottom: 2, display: 'inline-block' }}>{syn}</span>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -111,6 +115,18 @@ function ModelOutput({ loading, result, originalText }) {
           }
           arrow
           placement="top"
+          componentsProps={{
+            tooltip: {
+              style: {
+                background: '#fff',
+                color: '#222',
+                border: '1px solid #ccc',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                borderRadius: 6,
+                padding: 12,
+              },
+            },
+          }}
         >
           <span
             style={{
