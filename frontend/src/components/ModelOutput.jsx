@@ -1,5 +1,5 @@
 import './ModelOutput.css';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Tooltip from '@mui/material/Tooltip';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -36,6 +36,16 @@ function ModelOutput({ loading, result, originalText }) {
     }
   }, [hpoDetails, fetching]);
 
+  // Preload HPO details for all matches when matches change
+  useEffect(() => {
+    if (!matches || matches.length === 0) return;
+    const uniqueIds = Array.from(new Set(matches.map(m => m.id)));
+    uniqueIds.forEach(id => {
+      fetchHpo(id);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(matches)]);
+
   // Annotate text with spans for each match
   function annotateText(text, matches) {
     if (!text || !matches.length) return text;
@@ -71,8 +81,10 @@ function ModelOutput({ loading, result, originalText }) {
       const { match_text, id } = token;
       const details = hpoDetails[id];
       const isValid = details?.valid;
-      const color = isValid === false ? '#f87171' : isValid === true ? '#4ade80' : '#facc15';
-      // const color = isValid === true ? '#4ade80' : '#f87171';
+      let color = '#facc15'; // orange while loading
+      if (!fetching[id]) {
+        color = isValid === true ? '#4ade80' : '#f87171';
+      }
       return (
         <Tooltip
           key={i}
@@ -99,7 +111,6 @@ function ModelOutput({ loading, result, originalText }) {
           }
           arrow
           placement="top"
-          onOpen={() => fetchHpo(id)}
         >
           <span
             style={{
