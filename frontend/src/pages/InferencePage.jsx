@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ModelSelector, FileInput, TextInput, ActionButtons, ModelOutput } from '../components';
+import HpoTermList from '../components/HpoTermList';
 import './InferencePage.css';
 
 function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading, result }) {
@@ -8,6 +9,14 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
   const [fileContent, setFileContent] = useState('');
   const [fileName, setFileName] = useState('');
   const [lastAnalyzedText, setLastAnalyzedText] = useState('');
+
+  // Parse result JSON and extract matches for HPO term list
+  let parsedResult = null;
+  let matches = [];
+  try {
+    parsedResult = typeof result === 'string' ? JSON.parse(result) : result;
+    matches = parsedResult?.results?.[0] || [];
+  } catch (e) {}
 
   const handleFileSelect = (content, name) => {
     setFileContent(content);
@@ -40,7 +49,10 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
 
   return (
     <div className="inference-container">
-      <div className="inference-grid">
+      <div
+        className={matches.length > 0 && !loading ? 'inference-grid inference-grid-hpo' : 'inference-grid'}
+        style={{ justifyContent: matches.length > 0 && !loading ? 'start' : 'center', transition: 'justify-content 0.3s' }}
+      >
         {/* LEFT SIDE - Input Section */}
         <div className="inference-left">
           <div className="inference-card">
@@ -97,8 +109,8 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
             </button>
           </div>
         </div>
-        {/* RIGHT SIDE - Output Section */}
-        <div className="inference-right">
+        {/* CENTER - Output Section */}
+        <div className="inference-center">
           <div className="inference-card">
             <h2 className="inference-section-title">Model Actions</h2>
             <ActionButtons callApi={callApi} />
@@ -110,6 +122,14 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
               result={result} 
               originalText={lastAnalyzedText}
             />
+            {/* HPO Term List inside the Analysis Results card */}
+            {matches.length > 0 && !loading && (
+              <>
+                <hr style={{ margin: '2rem 0' }} />
+                <h3 className="inference-section-title" style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Identified HPO Terms</h3>
+                <HpoTermList matches={matches} />
+              </>
+            )}
           </div>
         </div>
       </div>
