@@ -85,6 +85,18 @@ function ModelOutput({ loading, result, originalText }) {
       if (!fetching[id]) {
         color = isValid === true ? '#4ade80' : '#f87171';
       }
+      // Set lighter background and darker outline for each color
+      let bgColor = '#fef3c7'; // light orange
+      let outlineColor = '#f59e42'; // darker orange
+      if (!fetching[id]) {
+        if (isValid === true) {
+          bgColor = '#d1fae5'; // light green
+          outlineColor = '#059669'; // dark green
+        } else {
+          bgColor = '#fee2e2'; // light red
+          outlineColor = '#dc2626'; // dark red
+        }
+      }
       return (
         <Tooltip
           key={i}
@@ -130,11 +142,13 @@ function ModelOutput({ loading, result, originalText }) {
         >
           <span
             style={{
-              background: color,
+              background: bgColor,
+              border: `2px solid ${outlineColor}`,
               borderRadius: 4,
               padding: '0 2px',
               cursor: 'pointer',
-              transition: 'background 0.2s',
+              transition: 'background 0.2s, border 0.2s',
+              boxSizing: 'border-box',
             }}
           >
             {match_text}
