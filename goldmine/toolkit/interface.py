@@ -7,6 +7,9 @@ from goldmine.types import (
     ToolInput,
     ToolOutput,
     ToolResponse,
+    ToolBatchInput,
+    ToolBatchOutput,
+    ToolBatchResponse,
     ToolState,
     ToolStatus,
     UnloadResponse,
@@ -46,6 +49,16 @@ class ModelInterface(ABC):
         Should return a list of lists of PhenotypeMatch objects (one list per sentence).
         """
         pass
+    
+    async def _batch_predict(self, input: ToolBatchInput) -> ToolBatchOutput:
+        """
+        Run prediction on a list of documents. A document is a list of sentences.
+        """
+        processed_documents = []
+        for d in input.documents:
+            output = await self._predict(ToolInput(sentences=d))
+            processed_documents.append(output.results)
+        return ToolBatchOutput(results=processed_documents)
 
     @abstractmethod
     def _get_model_info(self) -> ToolInfo:
@@ -123,6 +136,28 @@ class ModelInterface(ABC):
             self.state = ToolState.ERROR
             self.error_message = str(e)
             raise
+
+    
+    async def batch_predict(self, input_data: ToolBatchInput) -> ToolBatchResponse:
+        """
+        Public method to run prediction, used by the API layer.
+        """
+        if not self.model_loaded:
+            raise RuntimeError("Model must be loaded before prediction")
+
+        if self.state == ToolState.BUSY:
+            raise RuntimeError("Model is currently busy, please try again later")
+
+        start_time = time.time()
+        try:
+            output = await self._batch_predict(input_data)
+            processing_time = time.time() - start_time
+            return ToolBatchResponse(results=output.results, processing_time=processing_time)
+        except Exception as e:
+            self.state = ToolState.ERROR
+            self.error_message = str(e)
+            raise
+
 
     def get_status(self) -> ToolStatus:
         """
