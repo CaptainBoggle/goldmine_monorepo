@@ -4,7 +4,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from .routers import corpora, tool_proxy, tools
+from .routers import corpora, tool_proxy, tools, predictions, metrics
 from .services.database import initialise_database
 
 
@@ -36,6 +36,8 @@ app = FastAPI(
 app.include_router(tools.router, prefix="/tools", tags=["tools"])
 app.include_router(tool_proxy.router, prefix="/proxy", tags=["tool-proxy"])
 app.include_router(corpora.router, prefix="/corpora", tags=["corpora"])
+app.include_router(predictions.router, prefix="/predictions", tags=["predictions"])
+app.include_router(metrics.router, prefix="/metrics", tags=["metrics"])
 
 
 @app.get("/")
