@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 
 from goldmine.toolkit.interface import ModelInterface
 
-from ..types import LoadResponse, ToolInfo, ToolInput, ToolResponse, ToolStatus
+from ..types import LoadResponse, ToolInfo, ToolInput, ToolResponse, ToolBatchInput, ToolBatchResponse, ToolStatus
 
 
 def create_app(model_implementation: ModelInterface):
@@ -60,6 +60,22 @@ def create_app(model_implementation: ModelInterface):
         """
         try:
             return await model_implementation.predict(input_data)
+
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            raise HTTPException(
+                status_code=500, detail=f"An unexpected error occurred during prediction: {str(e)}"
+            )
+        
+    @app.post("/batch_predict", response_model=ToolBatchResponse)
+    async def batch_predict(input_data: ToolBatchInput) -> ToolBatchResponse:
+        """
+        Process a list of documents to identify phenotype IDs.
+        This endpoint will automatically load the model if it's not already loaded.
+        """
+        try:
+            return await model_implementation.batch_predict(input_data)
 
         except HTTPException as e:
             raise e

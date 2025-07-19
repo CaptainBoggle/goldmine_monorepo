@@ -3,7 +3,7 @@ from typing import Any, Dict
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 
-from goldmine.types import LoadResponse, ToolInfo, ToolInput, ToolResponse, ToolStatus
+from goldmine.types import LoadResponse, ToolInfo, ToolInput, ToolResponse, ToolBatchInput, ToolBatchResponse, ToolStatus
 
 from ..dependencies import get_tool_service
 from ..services.tool_service import ToolService
@@ -62,6 +62,20 @@ async def predict_with_tool(
         raise HTTPException(status_code=404, detail=f"Tool '{tool_id}' not found")
 
     return await _proxy_post_request(tool.endpoint, "/predict", input_data.dict(), timeout=120.0)
+
+
+
+@router.post("/{tool_id}/batch_predict", response_model=ToolBatchResponse)
+async def batch_predict_with_tool(
+    tool_id: str, input_data: ToolBatchInput, tool_service: ToolService = Depends(get_tool_service)
+):
+    """Make a batch prediction using a specific tool"""
+    tool = tool_service.get_tool_by_name(tool_id)
+    if not tool:
+        raise HTTPException(status_code=404, detail=f"Tool '{tool_id}' not found")
+
+    return await _proxy_post_request(tool.endpoint, "/batch_predict", input_data.dict(), timeout=120.0)
+
 
 
 # Helper functions for making HTTP requests

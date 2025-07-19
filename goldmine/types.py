@@ -53,6 +53,21 @@ class ToolResponse(ToolOutput):
     )
 
 
+class ToolBatchInput(SQLModel):
+    documents: List[List[str]] = Field(..., description="List of documents to be processed by the tool")
+
+
+class ToolBatchOutput(SQLModel):
+    results: List[List[List[PhenotypeMatch]]] = Field(
+        ..., description="List of of phenotype matches for each document"
+    )
+
+class ToolBatchResponse(ToolBatchOutput):
+    processing_time: Optional[float] = Field(
+        None, description="Time taken to process the input in seconds"
+    )
+
+
 class ToolInfo(SQLModel):
     """Information about a tool"""
 
@@ -143,6 +158,7 @@ class CorpusDocument(SQLModel, table=True):
     )
 
     corpus: Optional["Corpus"] = Relationship(back_populates="entries")
+    predictions: List["Prediction"] = Relationship(back_populates="document", cascade_delete=True)
 
     def __init__(
         self,
@@ -253,3 +269,120 @@ class Corpus(SQLModel, table=True):
     def total_annotations(self) -> int:
         """Get the total number of annotations across all documents in this corpus"""
         return sum(doc.annotation_count for doc in self.entries)
+
+
+class Prediction(SQLModel, table=True):
+    """A prediction made by a tool on a document."""
+
+    db_id: Optional[int] = Field(default=None, primary_key=True, description="Database ID")
+    document_id: Optional[int] = Field(
+        default=None, foreign_key="corpusdocument.db_id", description="Foreign key to document", index=True
+    )
+
+    tool_name: str = Field(..., description="Name of the tool that made the prediction")
+    tool_version: str = Field(..., description="Version of the tool that made the prediction")
+
+    # Store the complex objects as JSON in the database
+    output_internal: dict = Field(
+        default_factory=dict,
+        sa_column=Column(JSON),
+        description="Serialised ToolOutput",
+        exclude=True  # Hide from API responses
+    )
+
+    document: "CorpusDocument" = Relationship(back_populates="predictions")
+
+    def __init__(
+        self,
+        *,
+        db_id: Optional[int] = None,
+        document_id: Optional[int] = None,
+        tool_name: str,
+        tool_version: str,
+        output: Optional[ToolOutput] = None,
+        output_internal: Optional[dict] = None,
+        **kwargs
+    ):
+        """
+        Initialise Prediction with either ToolOutput objects or raw data.
+        Args:
+            output: ToolOutput object (will be serialised to output_internal)
+            output_internal: Raw dict data (for database loading)
+        """
+        # Call parent init with database fields
+        super().__init__(
+            db_id=db_id,
+            document_id=document_id,
+            tool_name=tool_name,
+            tool_version=tool_version,
+            output_internal=output_internal or {},
+            **kwargs
+        )
+
+        # If ToolOutput object was passed, serialise it
+        if output is not None:
+            self.output = output
+
+    # Properties to access ToolOutput directly
+    @computed_field
+    @property
+    def output(self) -> ToolOutput:
+        """Get the ToolOutput object"""
+        if not self.output_internal:
+            return ToolOutput(results=[])
+        # Convert dict back to PhenotypeMatch objects
+        results = []
+        for sentence_results in self.output_internal.get("results", []):
+            sentence_matches = [
+                PhenotypeMatch.model_validate(match) for match in sentence_results
+            ]
+            results.append(sentence_matches)
+        return ToolOutput(results=results)
+
+    @output.setter
+    def output(self, value: ToolOutput):
+        """Set the ToolOutput object"""
+        # Convert PhenotypeMatch objects to dicts for JSON storage
+        results = []
+        for sentence_results in value.results:
+            sentence_dicts = [match.model_dump() for match in sentence_results]
+            results.append(sentence_dicts)
+        self.output_internal = {"results": results}
+
+
+class EvaluationResult(SQLModel):
+    """Result of an evaluation."""
+
+    accuracy: float
+    f1: float
+    precision: float
+    recall: float
+
+
+class Metric(SQLModel, table=True):
+    """An evaluation metric stored in the database."""
+
+    db_id: Optional[int] = Field(default=None, primary_key=True)
+    tool_name: str = Field(..., index=True)
+    tool_version: str
+    corpus_name: str = Field(..., index=True)
+    corpus_version: str
+
+    # Store the complex objects as JSON in the database
+    evaluation_result_internal: dict = Field(
+        default_factory=dict,
+        sa_column=Column(JSON),
+        description="Serialised EvaluationResult",
+        exclude=True,  # Hide from API responses
+    )
+
+    @computed_field
+    @property
+    def evaluation_result(self) -> EvaluationResult:
+        """Get the EvaluationResult object"""
+        return EvaluationResult.model_validate(self.evaluation_result_internal)
+
+    @evaluation_result.setter
+    def evaluation_result(self, value: EvaluationResult):
+        """Set the EvaluationResult object"""
+        self.evaluation_result_internal = value.model_dump()
