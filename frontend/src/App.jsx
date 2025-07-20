@@ -1,39 +1,15 @@
-import { useState, useEffect } from 'react';
 import { Navigation } from './components';
 import { InferencePage, PerformancePage, AboutPage } from './pages';
+import { useTools, useApiCall, useNavigation } from './hooks';
 
 function App() {
-  const [tools, setTools] = useState([]);
-  const [selectedTool, setSelectedTool] = useState('');
-  const [result, setResult] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('Inference');
+  const { tools, selectedTool, setSelectedTool, error: toolsError, fetchTools } = useTools();
+  const { loading, result, error: apiError, callApi } = useApiCall();
+  const { activeTab, setActiveTab } = useNavigation();
 
-  useEffect(() => {
-    fetch('/api/tools/')
-      .then(r => r.json())
-      .then(data => {
-        setTools(Array.isArray(data) ? data : []);
-        if (data.length > 0) setSelectedTool(data[0].id);
-      })
-      .catch(e => console.error(e));
-  }, []);
-
-  const callApi = async (endpoint, method = 'GET', body = null) => {
-    setLoading(true);
-    setResult('');
-    try {
-      const response = await fetch(`/api/proxy/${selectedTool}${endpoint}`, {
-        method,
-        headers: body ? { 'Content-Type': 'application/json' } : {},
-        body: body ? JSON.stringify(body) : null
-      });
-      const data = await response.json();
-      setResult(JSON.stringify(data, null, 2));
-    } catch (err) {
-      setResult(`Error: ${err.message}`);
-    }
-    setLoading(false);
+  // Create a wrapper function for callApi that includes the selectedTool
+  const handleApiCall = (endpoint, method = 'GET', body = null) => {
+    return callApi(selectedTool, endpoint, method, body);
   };
 
   return (
@@ -41,13 +17,35 @@ function App() {
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
         <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
 
+        {/* Error Display */}
+        {(toolsError || apiError) && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <div className="text-red-700">
+              {toolsError && (
+                <div className="mb-2">
+                  <p className="font-medium">Tools Error: {toolsError}</p>
+                  <button 
+                    onClick={fetchTools}
+                    className="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm"
+                  >
+                    Retry Fetch Tools
+                  </button>
+                </div>
+              )}
+              {apiError && (
+                <p className="font-medium">API Error: {apiError}</p>
+              )}
+            </div>
+          </div>
+        )}
+
         <main className="mt-6 sm:mt-8 lg:mt-12">
           {activeTab === 'Inference' && (
             <InferencePage
               tools={tools}
               selectedTool={selectedTool}
               setSelectedTool={setSelectedTool}
-              callApi={callApi}
+              callApi={handleApiCall}
               loading={loading}
               result={result}
             />
