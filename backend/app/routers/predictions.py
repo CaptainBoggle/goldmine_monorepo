@@ -43,11 +43,25 @@ async def run_tool_on_corpus(
             ) from e
 
     # Get all documents from this corpus
-    documents = corpus.entries
+    try:
+        documents = corpus.entries
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error loading corpus '{corpus.name}': {str(e)}"
+        )
+
     if not documents:
         raise HTTPException(status_code=404, detail=f"No documents found in corpus '{corpus.name}'")
 
-    batch_input = {"documents": [doc.input.sentences for doc in documents]}
+    # Prepare batch input
+    try:
+        batch_input = {"documents": [doc.input.sentences for doc in documents]}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error preparing batch input: {str(e)}"
+        )
 
     # Call the tool's batch_predict endpoint
     async with httpx.AsyncClient() as client:
@@ -71,16 +85,23 @@ async def run_tool_on_corpus(
             raise HTTPException(status_code=500, detail=f"Error calling tool '{tool.id}': {e}")
 
     # Store predictions in the database
-    for i, doc in enumerate(documents):
-        prediction = Prediction(
-            document_id=doc.db_id,
-            tool_name=tool.id,
-            tool_version=tool_info["version"],
-            output=ToolOutput(results=batch_output["results"][i]),
-        )
-        session.add(prediction)
+    try:
+        for i, doc in enumerate(documents):
+            prediction = Prediction(
+                document_id=doc.db_id,
+                tool_name=tool.id,
+                tool_version=tool_info["version"],
+                output=ToolOutput(results=batch_output["results"][i]),
+            )
+            session.add(prediction)
 
-    session.commit()
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error storing predictions: {str(e)}"
+        )
 
     return {"message": f"Successfully ran tool '{tool.id}' on corpus '{corpus.name}' and stored {len(documents)} predictions."}
 

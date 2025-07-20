@@ -2,7 +2,10 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from sqlmodel import SQLModel
 
 from .routers import corpora, tool_proxy, tools, predictions, metrics
 from .services.database import initialise_database
@@ -31,6 +34,38 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Global exception handler to return JSON errors instead of HTML."""
+    import traceback
+    import logging
+    
+    # Log the full error for debugging
+    logging.error(f"Unhandled exception: {exc}")
+    logging.error(f"Traceback: {traceback.format_exc()}")
+    
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": f"Internal server error: {str(exc)}",
+            "type": type(exc).__name__
+        }
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle validation errors and return JSON responses."""
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": "Validation error",
+            "errors": exc.errors()
+        }
+    )
+
 
 # Include routers
 app.include_router(tools.router, prefix="/tools", tags=["tools"])
