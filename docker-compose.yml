@@ -22,7 +22,10 @@ services:
     depends_on:
       - database
     networks:
-      - goldmine-network    
+      - goldmine-network
+    volumes:
+      # Mount .data folder for persistence
+      - ./.data:/app/.data
 
   database:
     image: postgres

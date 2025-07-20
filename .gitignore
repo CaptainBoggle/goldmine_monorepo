@@ -1,5 +1,5 @@
-# Ignore postgres data directory
-.data/
+# Allow .data folder to be committed (contains preloaded results)
+# .data/
 
 # Ignore Python cache files
 __pycache__/
