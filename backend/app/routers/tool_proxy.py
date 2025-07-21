@@ -3,7 +3,7 @@ from typing import Any, Dict
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 
-from goldmine.types import LoadResponse, ToolInfo, ToolInput, ToolResponse, ToolBatchInput, ToolBatchResponse, ToolStatus
+from goldmine.types import LoadResponse, ToolInfo, ToolInput, ToolResponse, ToolBatchInput, ToolBatchResponse, ToolStatus, ExternalRecommenderPredictRequest, ExternalRecommenderPredictResponse
 
 from ..dependencies import get_tool_service
 from ..services.tool_service import ToolService
@@ -77,6 +77,18 @@ async def batch_predict_with_tool(
     return await _proxy_post_request(tool.endpoint, "/batch_predict", input_data.dict(), timeout=600.0)  # 10 minutes
 
 
+@router.post("/{tool_id}/external-recommender/predict", response_model=ExternalRecommenderPredictResponse)
+async def external_recommender_predict(
+    tool_id: str, request: ExternalRecommenderPredictRequest, tool_service: ToolService = Depends(get_tool_service)
+):
+    """Make a prediction using an external recommender tool"""
+    tool = tool_service.get_tool_by_name(tool_id)
+    if not tool:
+        raise HTTPException(status_code=404, detail=f"Tool '{tool_id}' not found")
+
+    response = await _proxy_post_request(tool.endpoint, "/external-recommender/predict", request.dict())
+    
+    return ExternalRecommenderPredictResponse(**response)
 
 # Helper functions for making HTTP requests
 async def _proxy_get_request(base_url: str, endpoint: str, timeout: float = 60.0) -> Dict[str, Any]:
