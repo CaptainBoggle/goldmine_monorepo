@@ -127,10 +127,10 @@ def create_app(model_implementation: ModelInterface):
             tool_output = await model_implementation.predict(tool_input)
 
             # mock test
-            tool_output = ToolOutput(results=[[
-                PhenotypeMatch(id="HP:0001250", match_text="epilepsy"),
-                PhenotypeMatch(id="HP:0000707", match_text="autism")
-            ]])
+            # tool_output = ToolOutput(results=[[
+            #     PhenotypeMatch(id="HP:0001250", match_text="epilepsy"),
+            #     PhenotypeMatch(id="HP:0000707", match_text="autism")
+            # ]])
 
             for match in tool_output.results[0]:
                 match_text = match.match_text or ""
