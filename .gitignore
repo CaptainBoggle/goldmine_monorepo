@@ -14,4 +14,4 @@ __pycache__/
 .Spotlight-V100
 .Trashes
 
-/frontend/node_modules/
+/frontend/node_modules/.data/postgres_data/
