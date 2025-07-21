@@ -15,7 +15,8 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
   let matches = [];
   try {
     parsedResult = typeof result === 'string' ? JSON.parse(result) : result;
-    matches = parsedResult?.results?.[0] || [];
+    // Flatten all matches from all sentences
+    matches = (parsedResult?.results || []).flat();
   } catch (e) {}
 
   const handleFileSelect = (content, name) => {
