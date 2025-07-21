@@ -2,7 +2,7 @@ import re
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import computed_field, field_validator
+from pydantic import BaseModel, computed_field, field_validator
 from sqlalchemy import JSON
 from sqlmodel import Column, Field, Relationship, SQLModel
 
@@ -114,6 +114,64 @@ class UnloadResponse(SQLModel):
         None,
         description="Optional message providing additional information about the unload operation",
     )
+
+
+# External Recommender API types (INCEpTION compatibility)
+class ExternalRecommenderDocument(BaseModel):
+    """
+    Document for external recommender API
+    https://inception-project.github.io/releases/37.1/docs/developer-guide.html#_external_recommender_api_document
+    """
+    document_id: Optional[int] = Field(
+        None, alias="documentId", description="Identifier for this document"
+    )
+    user_id: Optional[str] = Field(None, alias="userId", description="Identifier for the user")
+    xmi: Optional[str] = Field(None, description="CAS as XMI")
+
+    class Config:
+        populate_by_name = True
+
+
+class ExternalRecommenderMetadata(BaseModel):
+    """
+    Metadata for external recommender API
+    https://inception-project.github.io/releases/37.1/docs/developer-guide.html#_external_recommender_api_metadata
+    """
+    layer: str = Field(..., description="Layer which should be predicted")
+    feature: str = Field(..., description="Feature of the layer which should be predicted")
+    project_id: int = Field(..., alias="projectId", description="The id of the project")
+    anchoring_mode: str = Field(
+        ..., alias="anchoringMode", description="How annotations are anchored to tokens"
+    )
+    cross_sentence: bool = Field(
+        ..., alias="crossSentence", description="True if cross-sentence annotations are supported"
+    )
+
+    class Config:
+        populate_by_name = True
+
+
+class ExternalRecommenderPredictRequest(BaseModel):
+    """
+    Request for external recommender predict endpoint
+    https://inception-project.github.io/releases/37.1/docs/developer-guide.html#_external_recommender_api_predictrequest
+    """
+    document: ExternalRecommenderDocument = Field(..., description="Document to predict")
+    request_metadata: ExternalRecommenderMetadata = Field(
+        ..., alias="metadata", description="Metadata for prediction"
+    )
+    type_system: str = Field(..., alias="typeSystem", description="Type system XML of the CAS")
+
+    class Config:
+        populate_by_name = True
+
+
+class ExternalRecommenderPredictResponse(BaseModel):
+    """
+    Response from external recommender predict endpoint
+    https://inception-project.github.io/releases/37.1/docs/developer-guide.html#_external_recommender_api_predictresponse
+    """
+    document: str = Field(..., description="CAS with annotations as XMI")
 
 
 class ToolDiscoveryInfo(SQLModel):
