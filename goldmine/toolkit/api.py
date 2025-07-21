@@ -143,7 +143,7 @@ def create_app(model_implementation: ModelInterface):
                         begin=begin,
                         end=end,
                         **{
-                            feature_name: f"http://purl.obolibrary.org/obo/HP_{match.id}",
+                            feature_name: f"http://purl.obolibrary.org/obo/{match.id.replace(':', '_')}",
                             f"{feature_name}_score": 1.0,  # Assuming a score of 1.0 for simplicity
                             f"{feature_name}_score_explanation": f"Predicted by tool {model_implementation.get_info().name}",
                             "inception_internal_predicted": True
