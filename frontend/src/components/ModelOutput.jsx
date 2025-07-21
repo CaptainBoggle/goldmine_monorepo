@@ -10,8 +10,8 @@ function ModelOutput({ loading, result, originalText }) {
     parsedResult = typeof result === 'string' ? JSON.parse(result) : result;
   } catch (e) {}
 
-  // Extract matches
-  const matches = parsedResult?.results?.[0] || [];
+  // Extract matches from all sentences
+  const matches = (parsedResult?.results || []).flat();
 
   // State for HPO details cache
   const [hpoDetails, setHpoDetails] = useState({});

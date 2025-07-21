@@ -12,6 +12,17 @@ docker compose up
 - Example Model: http://localhost:6000
 - PhenoTagger Model: http://localhost:6001
 
+## Data Management
+
+The `.data` folder contains pre-loaded predictions and evaluation results to avoid re-running expensive operations. This data is committed to the repository for faster development and consistent results across team members.
+
+**Key benefits:**
+- **Faster startup** - No need to re-run predictions
+- **Consistent results** - Same data across all team members  
+- **Version control** - Track changes to predictions and metrics
+- **Easy collaboration** - New team members get pre-loaded data
+
+
 ## Development
 First, ensure git and git-lfs are installed. The latter is required for cloning large model weight files.
 
