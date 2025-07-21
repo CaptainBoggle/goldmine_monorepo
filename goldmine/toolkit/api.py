@@ -108,7 +108,7 @@ def create_app(model_implementation: ModelInterface):
         """
         try:
             print("Received request:", request) # debugging
-            print("Request metadata:", request.request_metadata) # debugging
+            print("Request metadata:", request.request_metadata) # debuggin
 
             # Load type system and CAS
             typesystem = load_typesystem(io.BytesIO(request.type_system.encode("utf-8")))
@@ -143,9 +143,9 @@ def create_app(model_implementation: ModelInterface):
                         begin=begin,
                         end=end,
                         **{
-                            feature_name: match.id,
-                            f"{feature_name}_score": 0.95,
-                            f"{feature_name}_score_explanation": f"Predicted by model from: {match_text}",
+                            feature_name: f"http://purl.obolibrary.org/obo/HP_{match.id}",
+                            f"{feature_name}_score": 1.0,  # Assuming a score of 1.0 for simplicity
+                            f"{feature_name}_score_explanation": f"Predicted by tool {model_implementation.get_info().name}",
                             "inception_internal_predicted": True
                         }
                     )
@@ -157,6 +157,7 @@ def create_app(model_implementation: ModelInterface):
         except HTTPException as e:
             raise e
         except Exception as e:
+            print(f"Error in external recommender predict: {str(e)}")
             raise HTTPException(
                 status_code=500,
                 detail=f"An unexpected error occurred in external recommender: {str(e)}"
