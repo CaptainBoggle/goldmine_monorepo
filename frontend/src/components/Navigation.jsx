@@ -1,7 +1,7 @@
 import './Navigation.css';
 
 function Navigation({ activeTab, setActiveTab }) {
-  const tabs = ['Inference', 'Performance', 'About'];
+  const tabs = ['Inference', 'Performance', 'Evaluation', 'About'];
   
   return (
     <div className="nav-container">
