@@ -193,15 +193,11 @@ function BarChart({ selectedCorpora, selectedMetrics }) {
 }
 
 function EvaluationPage() {
-  const [selectedCorpora, setSelectedCorpora] = useState([]);
+  const [selectedCorpus, setSelectedCorpus] = useState(CORPORA[0].key);
   const [selectedMetrics, setSelectedMetrics] = useState(['accuracy']);
 
-  const handleCheckboxChange = (corpusKey) => {
-    setSelectedCorpora((prev) =>
-      prev.includes(corpusKey)
-        ? prev.filter((key) => key !== corpusKey)
-        : [...prev, corpusKey]
-    );
+  const handleCorpusChange = (corpusKey) => {
+    setSelectedCorpus(corpusKey);
   };
 
   const handleMetricChange = (metricKey) => {
@@ -217,16 +213,16 @@ function EvaluationPage() {
       <h1 className="evaluation-title">Evaluation Results</h1>
       <div className="evaluation-section-list">
         <div className="evaluation-card">
-          <h2 className="evaluation-section-title">Select Corpora</h2>
+          <h2 className="evaluation-section-title">Select Corpus</h2>
           <div className="corpus-selector">
             {CORPORA.map((corpus) => (
               <label key={corpus.key}>
                 <input
-                  type="checkbox"
+                  type="radio"
                   name="corpus"
                   value={corpus.key}
-                  checked={selectedCorpora.includes(corpus.key)}
-                  onChange={() => handleCheckboxChange(corpus.key)}
+                  checked={selectedCorpus === corpus.key}
+                  onChange={() => handleCorpusChange(corpus.key)}
                 />
                 {corpus.label}
               </label>
@@ -249,44 +245,42 @@ function EvaluationPage() {
               ))}
             </div>
           </div>
-          {selectedCorpora.length === 0 || selectedMetrics.length === 0 ? (
-            <div style={{ color: '#888', margin: '2rem 0' }}>Select at least one corpus and one metric to see the graph.</div>
+          {(!selectedCorpus || selectedMetrics.length === 0) ? (
+            <div style={{ color: '#888', margin: '2rem 0' }}>Select a corpus and at least one metric to see the graph.</div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <BarChart selectedCorpora={selectedCorpora} selectedMetrics={selectedMetrics} />
+            <div>
+              <BarChart selectedCorpora={[selectedCorpus]} selectedMetrics={selectedMetrics} />
             </div>
           )}
         </div>
-        {selectedCorpora.length === 0 ? (
+        {!selectedCorpus ? (
           <div className="evaluation-card" style={{ color: '#888', marginTop: '2rem' }}>No corpus selected.</div>
         ) : (
-          selectedCorpora.map((corpusKey) => (
-            <div className="evaluation-card" key={corpusKey}>
-              <h2 className="evaluation-section-title">{CORPORA.find(c => c.key === corpusKey).label} Performance Results</h2>
-              <table className="evaluation-table">
-                <thead>
-                  <tr>
-                    <th>Tool</th>
-                    <th>Accuracy</th>
-                    <th>Precision</th>
-                    <th>Recall</th>
-                    <th>F1</th>
+          <div className="evaluation-card">
+            <h2 className="evaluation-section-title">{CORPORA.find(c => c.key === selectedCorpus).label} Performance Results</h2>
+            <table className="evaluation-table">
+              <thead>
+                <tr>
+                  <th>Tool</th>
+                  <th>Accuracy</th>
+                  <th>Precision</th>
+                  <th>Recall</th>
+                  <th>F1</th>
+                </tr>
+              </thead>
+              <tbody>
+                {TOOL_RESULTS[selectedCorpus].map((result) => (
+                  <tr key={result.tool}>
+                    <td>{result.tool}</td>
+                    <td>{result.accuracy}</td>
+                    <td>{result.precision}</td>
+                    <td>{result.recall}</td>
+                    <td>{result.f1}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {TOOL_RESULTS[corpusKey].map((result) => (
-                    <tr key={result.tool}>
-                      <td>{result.tool}</td>
-                      <td>{result.accuracy}</td>
-                      <td>{result.precision}</td>
-                      <td>{result.recall}</td>
-                      <td>{result.f1}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ))
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
