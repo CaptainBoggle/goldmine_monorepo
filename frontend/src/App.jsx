@@ -1,5 +1,5 @@
 import { Navigation } from './components';
-import { InferencePage, PerformancePage, AboutPage } from './pages';
+import { InferencePage, PerformancePage, AboutPage, EvaluationPage } from './pages';
 import { useTools, useApiCall, useNavigation } from './hooks';
 
 function App() {
@@ -52,6 +52,8 @@ function App() {
           )}
 
           {activeTab === 'Performance' && <PerformancePage />}
+
+          {activeTab === 'Evaluation' && <EvaluationPage />}
 
           {activeTab === 'About' && <AboutPage />}
         </main>

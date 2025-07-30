@@ -1,0 +1,66 @@
+/* EvaluationPage Styles */
+
+.evaluation-container {
+  @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+}
+
+.evaluation-title {
+  @apply text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-8;
+}
+
+.evaluation-section-list {
+  @apply space-y-8;
+}
+
+.evaluation-card {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+}
+
+.evaluation-section-title {
+  @apply text-xl font-semibold text-gray-900 mb-4;
+}
+
+.corpus-selector {
+  @apply flex gap-8 mb-6;
+}
+
+.corpus-selector label {
+  @apply text-base font-medium text-gray-700 cursor-pointer flex items-center gap-2;
+}
+
+.corpus-selector input[type="checkbox"] {
+  accent-color: #3b82f6;
+  @apply w-5 h-5;
+}
+
+.evaluation-table {
+  @apply w-full border-collapse mt-4 bg-gray-50 rounded-lg overflow-hidden shadow;
+}
+
+.evaluation-table th, .evaluation-table td {
+  @apply px-4 py-3 text-center;
+}
+
+.evaluation-table th {
+  @apply bg-gray-100 text-gray-900 font-semibold border-b-2 border-gray-200;
+}
+
+.evaluation-table td {
+  @apply bg-white text-gray-700 border-b border-gray-100;
+}
+
+.evaluation-table tr:last-child td {
+  @apply border-b-0;
+}
+
+@media (max-width: 700px) {
+  .evaluation-container {
+    @apply px-2;
+  }
+  .corpus-selector {
+    @apply flex-col gap-2;
+  }
+  .evaluation-table th, .evaluation-table td {
+    @apply px-2 py-2 text-sm;
+  }
+} 
