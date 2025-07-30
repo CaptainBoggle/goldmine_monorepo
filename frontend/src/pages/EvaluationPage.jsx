@@ -23,7 +23,7 @@ const TOOL_RESULTS = {
 };
 
 function EvaluationPage() {
-  const [selectedCorpora, setSelectedCorpora] = useState([CORPORA[0].key]);
+  const [selectedCorpora, setSelectedCorpora] = useState([]);
 
   const handleCheckboxChange = (corpusKey) => {
     setSelectedCorpora((prev) =>
