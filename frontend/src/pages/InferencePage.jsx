@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ModelSelector, FileInput, TextInput, ActionButtons, ModelOutput } from '../components';
+import { useState, useEffect } from 'react';
+import { ModelSelector, FileInput, TextInput, ActionButtons, ModelOutput, ModelActionOutput } from '../components';
 import HpoTermList from '../components/HpoTermList';
 import './InferencePage.css';
 
@@ -9,6 +9,15 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
   const [fileContent, setFileContent] = useState('');
   const [fileName, setFileName] = useState('');
   const [lastAnalyzedText, setLastAnalyzedText] = useState('');
+  const [lastAction, setLastAction] = useState(''); // Track the last action performed
+
+  // Load lastAnalyzedText from localStorage on component mount
+  useEffect(() => {
+    const saved = localStorage.getItem('inference_lastAnalyzedText');
+    if (saved) {
+      setLastAnalyzedText(saved);
+    }
+  }, []);
 
   // Parse result JSON and extract matches for HPO term list
   let parsedResult = null;
@@ -45,7 +54,15 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
       textToAnalyze = input;
     }
     setLastAnalyzedText(textToAnalyze);
+    localStorage.setItem('inference_lastAnalyzedText', textToAnalyze);
+    setLastAction('predict'); // Mark this as a prediction action
     callApi('/predict', 'POST', dataToSend);
+  };
+
+  // Wrapper function to track action type
+  const handleAction = (endpoint, method = 'GET') => {
+    setLastAction(endpoint.replace('/', '')); // Remove leading slash
+    callApi(endpoint, method);
   };
 
   return (
@@ -114,7 +131,11 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
         <div className="inference-center">
           <div className="inference-card">
             <h2 className="inference-section-title">Model Actions</h2>
-            <ActionButtons callApi={callApi} />
+            <ActionButtons callApi={handleAction} />
+            {/* Show formatted action output */}
+            {result && lastAction && lastAction !== 'predict' && (
+              <ModelActionOutput result={result} loading={loading} />
+            )}
           </div>
           <div className="inference-card">
             <h2 className="inference-section-title">Analysis Results</h2>
