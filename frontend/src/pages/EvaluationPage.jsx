@@ -1,26 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import './EvaluationPage.css';
-
-const CORPORA = [
-  { key: 'gold_corpus', label: 'Gold Corpus' },
-  { key: 'gold_corpus_small', label: 'Gold Corpus Small' },
-  { key: 'gold_corpus_tiny', label: 'Gold Corpus Tiny' },
-];
-
-const TOOL_RESULTS = {
-  gold_corpus: [
-    { tool: 'PhenoBERT', accuracy: 87.3, precision: 81.2, recall: 84.5, f1: 82.8 },
-    { tool: 'PhenoTagger', accuracy: 85.1, precision: 79.0, recall: 82.2, f1: 80.5 },
-  ],
-  gold_corpus_small: [
-    { tool: 'PhenoBERT', accuracy: 83.2, precision: 77.5, recall: 80.1, f1: 78.8 },
-    { tool: 'PhenoTagger', accuracy: 81.0, precision: 75.0, recall: 77.9, f1: 76.4 },
-  ],
-  gold_corpus_tiny: [
-    { tool: 'PhenoBERT', accuracy: 78.9, precision: 72.3, recall: 75.5, f1: 73.8 },
-    { tool: 'PhenoTagger', accuracy: 77.0, precision: 70.0, recall: 73.2, f1: 71.5 },
-  ],
-};
+import { useEvaluationAPI } from '../hooks/useEvaluationAPI';
+import MessageDisplay from '../components/MessageDisplay';
 
 const METRICS = [
   { key: 'accuracy', label: 'Accuracy', color: '#3b82f6' },
@@ -29,30 +10,54 @@ const METRICS = [
   { key: 'f1', label: 'F1', color: '#ef4444' },
 ];
 
-function BarChart({ selectedCorpora, selectedMetrics }) {
-  // Gather all unique tools
-  const allTools = Array.from(
-    new Set(
-      selectedCorpora.flatMap((corpusKey) =>
-        (TOOL_RESULTS[corpusKey] || []).map((r) => r.tool)
-      )
-    )
-  );
+function BarChart({ selectedCorpora, selectedMetrics, metricsData, tools }) {
+  // Get unique tools that have data for the selected corpora
+  const toolsWithData = useMemo(() => {
+    const toolSet = new Set();
+    selectedCorpora.forEach(corpusKey => {
+      Object.values(metricsData).forEach(data => {
+        if (data.corpus === corpusKey) {
+          toolSet.add(data.tool);
+        }
+      });
+    });
+    return Array.from(toolSet);
+  }, [selectedCorpora, metricsData]);
+
   // Fixed width and height
   const width = 760;
   const height = 300;
   const margin = { top: 60, right: 30, bottom: 50, left: 50 };
   const chartWidth = width - margin.left - margin.right;
   const chartHeight = height - margin.top - margin.bottom;
-  const barGroupWidth = chartWidth / allTools.length;
+  const barGroupWidth = chartWidth / Math.max(toolsWithData.length, 1);
   // Each group: (num corpora) * (num metrics) bars
   const barsPerGroup = selectedCorpora.length * selectedMetrics.length;
-  const barWidth = barGroupWidth / (barsPerGroup + 1);
+  const barWidth = barGroupWidth / Math.max(barsPerGroup + 1, 1);
   // Y scale (0-100)
   const yMax = 100;
 
   // Colors for metrics
   const metricColors = METRICS.map(m => m.color);
+
+  if (toolsWithData.length === 0) {
+    return (
+      <div style={{ 
+        width, 
+        height, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        background: '#f9fafb', 
+        borderRadius: 12, 
+        boxShadow: '0 1px 4px rgba(0,0,0,0.03)',
+        color: '#6b7280',
+        fontSize: 16
+      }}>
+        No data available for the selected corpora
+      </div>
+    );
+  }
 
   return (
     <svg width={width} height={height} style={{ background: '#f9fafb', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
@@ -81,7 +86,7 @@ function BarChart({ selectedCorpora, selectedMetrics }) {
       </g>
       {/* X axis labels */}
       <g>
-        {allTools.map((tool, i) => (
+        {toolsWithData.map((tool, i) => (
           <text
             key={tool}
             x={margin.left + barGroupWidth * i + barGroupWidth / 2}
@@ -97,11 +102,15 @@ function BarChart({ selectedCorpora, selectedMetrics }) {
       </g>
       {/* Bars */}
       <g>
-        {allTools.map((tool, i) =>
+        {toolsWithData.map((tool, i) =>
           selectedCorpora.flatMap((corpusKey, j) =>
             selectedMetrics.map((metricKey, k) => {
-              const toolResult = (TOOL_RESULTS[corpusKey] || []).find((r) => r.tool === tool);
-              const value = toolResult ? toolResult[metricKey] : 0;
+              // Find the data for this tool-corpus combination
+              const dataKey = Object.keys(metricsData).find(key => 
+                metricsData[key].tool === tool && metricsData[key].corpus === corpusKey
+              );
+              const data = dataKey ? metricsData[dataKey] : null;
+              const value = data ? (data[metricKey] * 100) : 0; // Convert to percentage
               const barIdx = j * selectedMetrics.length + k;
               return (
                 <rect
@@ -113,7 +122,7 @@ function BarChart({ selectedCorpora, selectedMetrics }) {
                   fill={metricColors[k % metricColors.length]}
                   opacity={0.85}
                 >
-                  <title>{`${tool} (${CORPORA.find(c => c.key === corpusKey)?.label || corpusKey}, ${METRICS.find(m => m.key === metricKey)?.label}): ${value}`}</title>
+                  <title>{`${tool} (${corpusKey}, ${METRICS.find(m => m.key === metricKey)?.label}): ${value.toFixed(1)}%`}</title>
                 </rect>
               );
             })
@@ -147,7 +156,7 @@ function BarChart({ selectedCorpora, selectedMetrics }) {
               fontSize={13}
               fill="#374151"
             >
-              {CORPORA.find(c => c.key === corpusKey)?.label || corpusKey}
+              {corpusKey}
             </text>
           </g>
         ))}
@@ -186,18 +195,48 @@ function BarChart({ selectedCorpora, selectedMetrics }) {
         transform={`rotate(-90,${margin.left - 36},${margin.top + chartHeight / 2})`}
         fontWeight={600}
       >
-        Value
+        Percentage
       </text>
     </svg>
   );
 }
 
 function EvaluationPage() {
-  const [selectedCorpus, setSelectedCorpus] = useState(CORPORA[0].key);
+  const { tools, corpora, metricsData, isLoading, error, clearError, refreshData, lastFetchTime, hasInitialData, lastUpdatedCorpus } = useEvaluationAPI();
+  const [selectedCorpus, setSelectedCorpus] = useState('');
+  const [selectedCorpusVersion, setSelectedCorpusVersion] = useState('');
   const [selectedMetrics, setSelectedMetrics] = useState(['accuracy']);
 
-  const handleCorpusChange = (corpusKey) => {
-    setSelectedCorpus(corpusKey);
+  // Get unique corpus names and their versions from the data
+  const availableCorpora = useMemo(() => {
+    const corpusMap = new Map();
+    Object.values(metricsData).forEach(data => {
+      if (!corpusMap.has(data.corpus)) {
+        corpusMap.set(data.corpus, new Set());
+      }
+      corpusMap.get(data.corpus).add(data.corpusVersion);
+    });
+    
+    // Convert to array of objects with corpus name and versions
+    return Array.from(corpusMap.entries()).map(([corpusName, versions]) => ({
+      name: corpusName,
+      versions: Array.from(versions).sort()
+    })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [metricsData]);
+
+  // Get available versions for the selected corpus
+  const availableVersions = useMemo(() => {
+    const corpus = availableCorpora.find(c => c.name === selectedCorpus);
+    return corpus ? corpus.versions : [];
+  }, [availableCorpora, selectedCorpus]);
+
+  const handleCorpusChange = (corpusName) => {
+    setSelectedCorpus(corpusName);
+    setSelectedCorpusVersion(''); // Reset version when corpus changes
+  };
+
+  const handleVersionChange = (version) => {
+    setSelectedCorpusVersion(version);
   };
 
   const handleMetricChange = (metricKey) => {
@@ -208,27 +247,128 @@ function EvaluationPage() {
     );
   };
 
+  const handleRefresh = () => {
+    if (selectedCorpus && selectedCorpusVersion) {
+      refreshData(selectedCorpus, selectedCorpusVersion);
+    }
+    // No fallback - only refresh if something is selected
+  };
+
+  // Check if refresh button should be disabled
+  const isRefreshDisabled = !selectedCorpus || !selectedCorpusVersion || isLoading;
+
+  // Get data for the selected corpus and version
+  const getCorpusData = (corpusKey, versionKey) => {
+    return Object.values(metricsData)
+      .filter(data => data.corpus === corpusKey && data.corpusVersion === versionKey)
+      .map(data => ({
+        tool: data.tool,
+        accuracy: (data.accuracy || 0) * 100, // Convert to percentage
+        precision: (data.precision || 0) * 100, // Convert to percentage
+        recall: (data.recall || 0) * 100, // Convert to percentage
+        f1: (data.f1 || 0) * 100, // Convert to percentage
+      }));
+  };
+
   return (
     <div className="evaluation-container">
       <h1 className="evaluation-title">Evaluation Results</h1>
+      
+      {/* Error Messages */}
+      <MessageDisplay 
+        error={error}
+        onClearError={clearError}
+      />
+
       <div className="evaluation-section-list">
         <div className="evaluation-card">
-          <h2 className="evaluation-section-title">Select Corpus</h2>
-          <div className="corpus-selector">
-            {CORPORA.map((corpus) => (
-              <label key={corpus.key}>
-                <input
-                  type="radio"
-                  name="corpus"
-                  value={corpus.key}
-                  checked={selectedCorpus === corpus.key}
-                  onChange={() => handleCorpusChange(corpus.key)}
-                />
-                {corpus.label}
-              </label>
-            ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 className="evaluation-section-title" style={{ marginBottom: 0 }}>Select Corpus and Version</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              {lastUpdatedCorpus && (
+                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                  Last updated: {lastUpdatedCorpus}
+                </div>
+              )}
+              <button 
+                onClick={handleRefresh}
+                disabled={isRefreshDisabled}
+                style={{ 
+                  padding: '0.5rem 1rem',
+                  backgroundColor: isRefreshDisabled ? '#9ca3af' : '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  cursor: isRefreshDisabled ? 'not-allowed' : 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                {isLoading ? 'Refreshing...' : 'Refresh Data'}
+              </button>
+            </div>
           </div>
+          
+          {isLoading ? (
+            <div style={{ color: '#888', margin: '1rem 0' }}>Loading data...</div>
+          ) : availableCorpora.length === 0 ? (
+            <div style={{ color: '#888', margin: '1rem 0' }}>
+              <div>No evaluation data available. Please run evaluations on the Performance page first.</div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.875rem', fontWeight: '500', color: '#374151' }}>
+                  Corpus:
+                </label>
+                <select
+                  value={selectedCorpus}
+                  onChange={(e) => handleCorpusChange(e.target.value)}
+                  style={{
+                    padding: '0.5rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    minWidth: '200px'
+                  }}
+                >
+                  <option value="">Select a corpus</option>
+                  {availableCorpora.map((corpus) => (
+                    <option key={corpus.name} value={corpus.name}>
+                      {corpus.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedCorpus && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <label style={{ fontSize: '0.875rem', fontWeight: '500', color: '#374151' }}>
+                    Version:
+                  </label>
+                  <select
+                    value={selectedCorpusVersion}
+                    onChange={(e) => handleVersionChange(e.target.value)}
+                    style={{
+                      padding: '0.5rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.875rem',
+                      minWidth: '150px'
+                    }}
+                  >
+                    <option value="">Select a version</option>
+                    {availableVersions.map((version) => (
+                      <option key={version} value={version}>
+                        {version}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
         </div>
+
         <div className="evaluation-card">
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
             <h2 className="evaluation-section-title" style={{ marginBottom: 0 }}>Comparison Graph</h2>
@@ -245,41 +385,58 @@ function EvaluationPage() {
               ))}
             </div>
           </div>
-          {(!selectedCorpus || selectedMetrics.length === 0) ? (
-            <div style={{ color: '#888', margin: '2rem 0' }}>Select a corpus and at least one metric to see the graph.</div>
+          {(!selectedCorpus || !selectedCorpusVersion || selectedMetrics.length === 0) ? (
+            <div style={{ color: '#888', margin: '2rem 0' }}>
+              {!selectedCorpus || !selectedCorpusVersion 
+                ? 'Select a corpus and version, and at least one metric to see the graph.'
+                : 'Select at least one metric to see the graph.'
+              }
+            </div>
           ) : (
             <div>
-              <BarChart selectedCorpora={[selectedCorpus]} selectedMetrics={selectedMetrics} />
+              <BarChart 
+                selectedCorpora={[selectedCorpus]} 
+                selectedMetrics={selectedMetrics} 
+                metricsData={metricsData}
+                tools={tools}
+              />
             </div>
           )}
         </div>
-        {!selectedCorpus ? (
-          <div className="evaluation-card" style={{ color: '#888', marginTop: '2rem' }}>No corpus selected.</div>
+
+        {!selectedCorpus || !selectedCorpusVersion ? (
+          <div className="evaluation-card" style={{ color: '#888', marginTop: '2rem' }}>
+            {!selectedCorpus ? 'No corpus selected.' : 'No version selected.'}
+          </div>
         ) : (
           <div className="evaluation-card">
-            <h2 className="evaluation-section-title">{CORPORA.find(c => c.key === selectedCorpus).label} Performance Results</h2>
-            <table className="evaluation-table">
-              <thead>
-                <tr>
-                  <th>Tool</th>
-                  <th>Accuracy</th>
-                  <th>Precision</th>
-                  <th>Recall</th>
-                  <th>F1</th>
-                </tr>
-              </thead>
-              <tbody>
-                {TOOL_RESULTS[selectedCorpus].map((result) => (
-                  <tr key={result.tool}>
-                    <td>{result.tool}</td>
-                    <td>{result.accuracy}</td>
-                    <td>{result.precision}</td>
-                    <td>{result.recall}</td>
-                    <td>{result.f1}</td>
+            <h2 className="evaluation-section-title">{selectedCorpus} ({selectedCorpusVersion}) Performance Results</h2>
+            {getCorpusData(selectedCorpus, selectedCorpusVersion).length === 0 ? (
+              <div style={{ color: '#888', margin: '1rem 0' }}>No data available for this corpus and version.</div>
+            ) : (
+              <table className="evaluation-table">
+                <thead>
+                  <tr>
+                    <th>Tool</th>
+                    <th>Accuracy</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {getCorpusData(selectedCorpus, selectedCorpusVersion).map((result) => (
+                    <tr key={result.tool}>
+                      <td>{result.tool}</td>
+                      <td>{result.accuracy.toFixed(1)}%</td>
+                      <td>{result.precision.toFixed(1)}%</td>
+                      <td>{result.recall.toFixed(1)}%</td>
+                      <td>{result.f1.toFixed(1)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
       </div>
