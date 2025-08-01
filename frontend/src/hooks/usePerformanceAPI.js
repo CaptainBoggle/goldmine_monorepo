@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLoading } from '../contexts/LoadingContext';
 
 export function usePerformanceAPI() {
   const [tools, setTools] = useState([]);
@@ -14,6 +15,8 @@ export function usePerformanceAPI() {
   const [success, setSuccess] = useState('');
   const [dataSource, setDataSource] = useState('');
   const [modelStatus, setModelStatus] = useState('');
+  
+  const { startLoading, stopLoading } = useLoading();
 
   // AbortController refs for cancellation
   const predictAbortController = useRef(null);
@@ -194,6 +197,7 @@ export function usePerformanceAPI() {
     setIsPredicting(true);
     setError('');
     setSuccess('');
+    startLoading(); // Prevent navigation during prediction
 
     // Create new AbortController for this prediction
     predictAbortController.current = new AbortController();
@@ -248,6 +252,7 @@ export function usePerformanceAPI() {
     } finally {
       setIsPredicting(false);
       predictAbortController.current = null;
+      stopLoading();
     }
   };
 
@@ -288,6 +293,7 @@ export function usePerformanceAPI() {
     setIsEvaluating(true);
     setError('');
     setSuccess('');
+    startLoading(); // Prevent navigation during evaluation
 
     // Create new AbortController for this evaluation
     evaluateAbortController.current = new AbortController();
@@ -314,6 +320,7 @@ export function usePerformanceAPI() {
           setError('Invalid metrics data structure - missing required fields');
         }
         setIsEvaluating(false);
+        stopLoading();
         return;
       } else {
         // Calculate new metrics
@@ -358,6 +365,7 @@ export function usePerformanceAPI() {
     } finally {
       setIsEvaluating(false);
       evaluateAbortController.current = null;
+      stopLoading();
     }
   };
 

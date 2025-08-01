@@ -1,7 +1,9 @@
 import './Navigation.css';
+import { useLoading } from '../contexts/LoadingContext';
 
 function Navigation({ activeTab, setActiveTab }) {
   const tabs = ['Inference', 'Performance', 'Evaluation', 'About'];
+  const { isGlobalLoading } = useLoading();
   
   return (
     <div className="nav-container">
@@ -15,7 +17,8 @@ function Navigation({ activeTab, setActiveTab }) {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`nav-tab ${activeTab === tab ? 'nav-tab-active' : 'nav-tab-inactive'}`}
+              disabled={isGlobalLoading}
+              className={`nav-tab ${activeTab === tab ? 'nav-tab-active' : 'nav-tab-inactive'} ${isGlobalLoading ? 'nav-tab-disabled' : ''}`}
             >
               {tab}
             </button>
