@@ -13,9 +13,9 @@
 [submodule "corpora/gold_corpus/externals"]
 	path = corpora/gold_corpus/externals
 	url = https://github.com/azankl/phenotypeCR_eval.git
-[submodule "experiments/qwen_rlvr/weights"]
-	path = experiments/qwen_rlvr/weights
-	url = https://huggingface.co/JackRi/Qwen3-0.6b-HPO_RL
 [submodule "experiments/qwen_rlvr/externals/phenotypeCR_eval"]
 	path = experiments/qwen_rlvr/externals/phenotypeCR_eval
 	url = https://github.com/azankl/phenotypeCR_eval.git
+[submodule "experiments/qwen_rlvr/weights"]
+	path = experiments/qwen_rlvr/weights
+	url = https://huggingface.co/JackRi/Qwen3-0.6b-HPO_RL
