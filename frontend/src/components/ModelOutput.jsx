@@ -3,7 +3,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import Tooltip from '@mui/material/Tooltip';
 import CircularProgress from '@mui/material/CircularProgress';
 
-function ModelOutput({ loading, result, originalText }) {
+function ModelOutput({ loading, result, originalText, hasRunAnalysis }) {
   // Parse result JSON
   let parsedResult = null;
   try {
@@ -161,12 +161,16 @@ function ModelOutput({ loading, result, originalText }) {
   let content;
   if (loading) {
     content = <div className="model-output-loading">loading...</div>;
-  } else if (parsedResult && originalText && matches.length > 0) {
+  } else if (hasRunAnalysis && result && parsedResult && originalText && matches.length > 0) {
+    // Show annotated text with hoverable terms
     const annotated = annotateText(originalText, matches);
     content = <div className="model-output-result" style={{ whiteSpace: 'pre-wrap' }}>{renderAnnotated(annotated)}</div>;
-  } else if (result) {
-    content = <pre className="model-output-result">{result}</pre>;
+  } else if (hasRunAnalysis && result && parsedResult && originalText && matches.length === 0 && parsedResult.results) {
+    // Show original text if we have a valid prediction result but no matches
+    // Only show this if parsedResult.results exists (indicating it's a prediction response)
+    content = <div className="model-output-result" style={{ whiteSpace: 'pre-wrap' }}>{originalText}</div>;
   } else {
+    // Don't show anything for non-prediction results (model actions) or when no analysis has been run
     content = null;
   }
 
