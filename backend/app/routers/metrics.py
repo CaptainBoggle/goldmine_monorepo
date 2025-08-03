@@ -4,6 +4,7 @@ import numpy as np
 from fastapi import APIRouter, Depends, HTTPException
 from sklearn.preprocessing import MultiLabelBinarizer
 from sqlmodel import Session, select
+from sklearn.metrics import hamming_loss
 
 from goldmine.types import (
     Corpus,
@@ -39,20 +40,24 @@ def calculate_evaluation_metrics(
         predictions=binarized_predictions, references=binarized_ground_truth
     )["accuracy"]
     f1 = f1_metric.compute(
-        predictions=binarized_predictions, references=binarized_ground_truth, average="weighted"
+        predictions=binarized_predictions, references=binarized_ground_truth, average="micro"
     )["f1"]
     precision = precision_metric.compute(
-        predictions=binarized_predictions, references=binarized_ground_truth, average="weighted"
+        predictions=binarized_predictions, references=binarized_ground_truth, average="micro"
     )["precision"]
     recall = recall_metric.compute(
-        predictions=binarized_predictions, references=binarized_ground_truth, average="weighted"
+        predictions=binarized_predictions, references=binarized_ground_truth, average="micro"
     )["recall"]
+    hamming = float(
+        hamming_loss(binarized_ground_truth, binarized_predictions)
+    )
 
     return EvaluationResult(
         accuracy=accuracy,
         f1=f1,
         precision=precision,
         recall=recall,
+        hamming=hamming
     )
 
 
