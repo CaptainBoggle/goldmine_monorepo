@@ -4,7 +4,7 @@ import numpy as np
 from fastapi import APIRouter, Depends, HTTPException
 from sklearn.preprocessing import MultiLabelBinarizer
 from sqlmodel import Session, select
-from sklearn.metrics import hamming_loss
+from sklearn.metrics import jaccard_score
 
 from goldmine.types import (
     Corpus,
@@ -48,8 +48,8 @@ def calculate_evaluation_metrics(
     recall = recall_metric.compute(
         predictions=binarized_predictions, references=binarized_ground_truth, average="micro"
     )["recall"]
-    hamming = float(
-        hamming_loss(binarized_ground_truth, binarized_predictions)
+    jaccard = float(
+        jaccard_score(binarized_ground_truth, binarized_predictions, average="micro")
     )
 
     return EvaluationResult(
@@ -57,7 +57,7 @@ def calculate_evaluation_metrics(
         f1=f1,
         precision=precision,
         recall=recall,
-        hamming=hamming
+        jaccard=jaccard
     )
 
 
