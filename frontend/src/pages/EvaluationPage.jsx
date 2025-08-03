@@ -270,6 +270,24 @@ function EvaluationPage() {
       }));
   };
 
+  // Find the best scores for each metric
+  const getBestScores = (data) => {
+    if (data.length === 0) return {};
+    
+    const bestScores = {
+      accuracy: Math.max(...data.map(d => d.accuracy)),
+      precision: Math.max(...data.map(d => d.precision)),
+      recall: Math.max(...data.map(d => d.recall)),
+      f1: Math.max(...data.map(d => d.f1))
+    };
+    
+    return bestScores;
+  };
+
+  // Get the data and best scores
+  const corpusData = getCorpusData(selectedCorpus, selectedCorpusVersion);
+  const bestScores = getBestScores(corpusData);
+
   return (
     <div className="evaluation-container">
       <h1 className="evaluation-title">Evaluation Results</h1>
@@ -411,7 +429,7 @@ function EvaluationPage() {
         ) : (
           <div className="evaluation-card">
             <h2 className="evaluation-section-title">{selectedCorpus} ({selectedCorpusVersion}) Performance Results</h2>
-            {getCorpusData(selectedCorpus, selectedCorpusVersion).length === 0 ? (
+            {corpusData.length === 0 ? (
               <div style={{ color: '#888', margin: '1rem 0' }}>No data available for this corpus and version.</div>
             ) : (
               <table className="evaluation-table">
@@ -425,13 +443,33 @@ function EvaluationPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {getCorpusData(selectedCorpus, selectedCorpusVersion).map((result) => (
+                  {corpusData.map((result) => (
                     <tr key={result.tool}>
                       <td>{result.tool}</td>
-                      <td>{result.accuracy.toFixed(1)}%</td>
-                      <td>{result.precision.toFixed(1)}%</td>
-                      <td>{result.recall.toFixed(1)}%</td>
-                      <td>{result.f1.toFixed(1)}%</td>
+                      <td style={{ 
+                        color: result.accuracy === bestScores.accuracy ? '#10b981' : '#374151',
+                        fontWeight: result.accuracy === bestScores.accuracy ? '600' : '400'
+                      }}>
+                        {result.accuracy.toFixed(1)}%
+                      </td>
+                      <td style={{ 
+                        color: result.precision === bestScores.precision ? '#10b981' : '#374151',
+                        fontWeight: result.precision === bestScores.precision ? '600' : '400'
+                      }}>
+                        {result.precision.toFixed(1)}%
+                      </td>
+                      <td style={{ 
+                        color: result.recall === bestScores.recall ? '#10b981' : '#374151',
+                        fontWeight: result.recall === bestScores.recall ? '600' : '400'
+                      }}>
+                        {result.recall.toFixed(1)}%
+                      </td>
+                      <td style={{ 
+                        color: result.f1 === bestScores.f1 ? '#10b981' : '#374151',
+                        fontWeight: result.f1 === bestScores.f1 ? '600' : '400'
+                      }}>
+                        {result.f1.toFixed(1)}%
+                      </td>
                     </tr>
                   ))}
                 </tbody>
