@@ -10,6 +10,7 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
   const [fileName, setFileName] = useState('');
   const [lastAnalyzedText, setLastAnalyzedText] = useState('');
   const [lastAction, setLastAction] = useState(''); // Track the last action performed
+  const [hasRunAnalysis, setHasRunAnalysis] = useState(false); // Track if analysis has been run in this session
 
   // Load lastAnalyzedText from localStorage on component mount
   useEffect(() => {
@@ -56,6 +57,7 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
     setLastAnalyzedText(textToAnalyze);
     localStorage.setItem('inference_lastAnalyzedText', textToAnalyze);
     setLastAction('predict'); // Mark this as a prediction action
+    setHasRunAnalysis(true); // Mark that analysis has been run in this session
     callApi('/predict', 'POST', dataToSend);
   };
 
@@ -143,9 +145,10 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
               loading={loading} 
               result={result} 
               originalText={lastAnalyzedText}
+              hasRunAnalysis={hasRunAnalysis}
             />
             {/* HPO Term List inside the Analysis Results card */}
-            {matches.length > 0 && !loading && (
+            {hasRunAnalysis && matches.length > 0 && !loading && (
               <>
                 <hr style={{ margin: '2rem 0' }} />
                 <h3 className="inference-section-title" style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Identified HPO Terms</h3>
