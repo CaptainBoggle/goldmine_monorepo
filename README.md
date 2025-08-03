@@ -95,3 +95,7 @@ uv run ruff format . && uv run ruff check .
 
 
 [![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg)](https://classroom.github.com/online_ide?assignment_repo_id=19698121&assignment_repo_type=AssignmentRepo)
+
+## Experiments
+We also run some experiments, to identify the effectiveness of various methods for improving HPO id extraction performance. The results and replication code for these experiments are located in the 'experiments' folder:
+- qwen_rlvr: this is an attempt to train the model qwen3-0.6b via the GRPO algorithm to improve it's performance. Weights are in qwen_rlvr/weights
