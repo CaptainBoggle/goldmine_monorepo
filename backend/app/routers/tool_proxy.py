@@ -61,7 +61,7 @@ async def predict_with_tool(
     if not tool:
         raise HTTPException(status_code=404, detail=f"Tool '{tool_id}' not found")
 
-    return await _proxy_post_request(tool.endpoint, "/predict", input_data.dict(), timeout=120.0)
+    return await _proxy_post_request(tool.endpoint, "/predict", input_data.dict(), timeout=600.0)
 
 
 
@@ -74,7 +74,7 @@ async def batch_predict_with_tool(
     if not tool:
         raise HTTPException(status_code=404, detail=f"Tool '{tool_id}' not found")
 
-    return await _proxy_post_request(tool.endpoint, "/batch_predict", input_data.dict(), timeout=120.0)
+    return await _proxy_post_request(tool.endpoint, "/batch_predict", input_data.dict(), timeout=600.0)  # 10 minutes
 
 
 
