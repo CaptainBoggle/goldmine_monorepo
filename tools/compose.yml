@@ -40,3 +40,19 @@ services:
       - goldmine-network
     ports:
       - "6003:8000"
+
+  hpo-agent:
+    build:
+      context: ..
+      dockerfile: tools/hpo-agent/Dockerfile
+    container_name: hpo-agent
+    networks:
+      - goldmine-network
+    ports:
+      - "6004:8000"
+    environment:
+      - GOOG_API=${GOOG_API}  # Pass through the Google API key for Gemini
+    volumes:
+      - ./hpo-agent/hpo:/app/tools/hpo-agent/hpo
+      - ./hpo-agent/hpo_vector_db:/app/tools/hpo-agent/hpo_vector_db
+      - ./hpo-agent/huggingface:/app/huggingface
