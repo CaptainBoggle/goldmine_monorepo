@@ -12,6 +12,7 @@ export function useEvaluationPreload() {
   const [lastFetchTime, setLastFetchTime] = useState(null);
   const [hasInitialData, setHasInitialData] = useState(false);
   const [lastUpdatedCorpus, setLastUpdatedCorpus] = useState(null);
+  const [lastRefreshTime, setLastRefreshTime] = useState(null);
   
   const { startLoading, stopLoading } = useLoading();
   
@@ -229,61 +230,27 @@ export function useEvaluationPreload() {
       metricsAbortController.current = null;
     }
   };
-
-  const retryFetchAll = async () => {
-    console.log('Starting retryFetchAll');
-    // Clear any existing errors
-    setError('');
-    startLoading(); // Disable navigation during retry
-    
-    try {
-      // If we don't have tools or corpora, fetch them first
-      if (tools.length === 0) {
-        console.log('No tools found, fetching tools...');
-        await fetchTools();
-      }
-      if (corpora.length === 0) {
-        console.log('No corpora found, fetching corpora...');
-        await fetchCorpora();
-      }
-      
-      console.log('About to fetch metrics with:', { toolsCount: tools.length, corporaCount: corpora.length });
-      
-      // Try to fetch metrics with retry logic
-      let retryCount = 0;
-      const maxRetries = 3;
-      
-      while (retryCount < maxRetries) {
-        try {
-          await fetchAllMetrics();
-          break; // Success, exit retry loop
-        } catch (error) {
-          retryCount++;
-          console.log(`Fetch attempt ${retryCount} failed:`, error.message);
-          
-          if (retryCount >= maxRetries) {
-            setError(`Failed to fetch data after ${maxRetries} attempts. Please try again later.`);
-            break;
-          }
-          
-          // Exponential backoff: wait longer between each retry
-          const delay = Math.pow(2, retryCount) * 1000; // 2s, 4s, 8s
-          console.log(`Waiting ${delay}ms before retry ${retryCount + 1}...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-      }
-    } finally {
-      stopLoading(); // Re-enable navigation after retry
-    }
-  };
-
+  
   const refreshData = async (selectedCorpus = null, selectedCorpusVersion = null) => {
     console.log('Manual refresh requested for:', { selectedCorpus, selectedCorpusVersion });
     
-    // Cancel any existing request
-    if (metricsAbortController.current) {
-      metricsAbortController.current.abort();
+    // Debounce: prevent rapid successive clicks
+    const now = Date.now();
+    if (lastRefreshTime && (now - lastRefreshTime) < 2000) {
+      console.log('Refresh debounced - too soon since last refresh');
+      return;
     }
+    setLastRefreshTime(now);
+    
+    // Cancel any existing request and ensure cleanup
+    if (metricsAbortController.current) {
+      console.log('Cancelling existing request...');
+      metricsAbortController.current.abort();
+      metricsAbortController.current = null;
+    }
+    
+    // Wait a bit for cleanup
+    await new Promise(resolve => setTimeout(resolve, 100));
     
     metricsAbortController.current = new AbortController();
     setIsLoading(true);
@@ -300,40 +267,75 @@ export function useEvaluationPreload() {
       if (!targetCorpus || !targetVersion) {
         setError('No corpus or version available for refresh');
         setIsLoading(false);
+        stopLoading();
         return;
       }
       
       console.log(`Refreshing metrics for corpus: ${targetCorpus}, version: ${targetVersion}`);
       
-      // Only fetch metrics for the selected corpus and version
-      const requests = [];
+      // First, check which tools have predictions for this corpus
+      const toolsWithPredictions = [];
       for (const tool of tools) {
-        const key = `${tool.id}_${targetCorpus}_${targetVersion}`;
-        requests.push({
-          key,
-          tool,
-          corpus: { name: targetCorpus, corpus_version: targetVersion },
-          url: `/api/metrics/${tool.id}/${targetCorpus}/${targetVersion}`
-        });
+        try {
+          console.log(`Checking predictions for tool: ${tool.id}...`);
+          const predictionUrl = `/api/predictions/${tool.id}/${targetCorpus}/${targetVersion}`;
+          const response = await fetch(predictionUrl, {
+            signal: metricsAbortController.current.signal,
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
+          
+          if (response.ok) {
+            const predictions = await response.json();
+            if (predictions && predictions.length > 0) {
+              toolsWithPredictions.push(tool);
+              console.log(`Found predictions for tool: ${tool.id}`);
+            } else {
+              console.log(`No predictions found for tool: ${tool.id}`);
+            }
+          } else {
+            console.log(`Failed to check predictions for ${tool.id}: ${response.status}`);
+          }
+        } catch (error) {
+          if (error.name !== 'AbortError') {
+            console.warn(`Failed to check predictions for ${tool.id}:`, error);
+          }
+        }
+        
+        // Small delay between prediction checks
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
       
-      console.log(`Making ${requests.length} requests for ${targetCorpus} (${targetVersion})`);
+      console.log(`Found ${toolsWithPredictions.length} tools with predictions for ${targetCorpus} (${targetVersion})`);
       
-      // Process requests one at a time with conservative timing
-      for (let i = 0; i < requests.length; i++) {
+      if (toolsWithPredictions.length === 0) {
+        console.log('No tools with predictions found, clearing metrics data');
+        setMetricsData({});
+        setLastUpdatedCorpus(null);
+        return;
+      }
+      
+      // Only fetch metrics for tools that have predictions
+      for (let i = 0; i < toolsWithPredictions.length; i++) {
         // Check if request was cancelled
         if (metricsAbortController.current.signal.aborted) {
           console.log('Refresh request was cancelled');
           return;
         }
         
-        const { key, tool, corpus, url } = requests[i];
-        console.log(`Processing request ${i + 1}/${requests.length}: ${key}`);
+        const tool = toolsWithPredictions[i];
+        const key = `${tool.id}_${targetCorpus}_${targetVersion}`;
+        const url = `/api/metrics/${tool.id}/${targetCorpus}/${targetVersion}`;
+        
+        console.log(`Fetching metrics ${i + 1}/${toolsWithPredictions.length}: ${key}`);
         
         try {
-          // Add a small delay before each request
+          // Add a delay before each request (including the first one)
           if (i > 0) {
-            await new Promise(resolve => setTimeout(resolve, 200));
+            console.log('Waiting 500ms before next request...');
+            await new Promise(resolve => setTimeout(resolve, 500));
           }
           
           const response = await fetch(url, {
@@ -355,24 +357,58 @@ export function useEvaluationPreload() {
                 if (latestMetric.evaluation_result) {
                   newMetricsData[key] = {
                     tool: tool.id,
-                    corpus: corpus.name,
-                    corpusVersion: corpus.corpus_version,
+                    corpus: targetCorpus,
+                    corpusVersion: targetVersion,
                     ...latestMetric.evaluation_result
                   };
                   console.log(`Added metrics data for ${key}`);
                 }
               }
             }
+          } else if (response.status === 500 || response.status === 503) {
+            // Retry once for server errors
+            console.log(`Server error for ${key}, retrying once...`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const retryResponse = await fetch(url, {
+              signal: metricsAbortController.current.signal,
+              headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+              }
+            });
+            
+            if (retryResponse.ok) {
+              const contentType = retryResponse.headers.get('content-type');
+              if (contentType && contentType.includes('application/json')) {
+                const metrics = await retryResponse.json();
+                console.log(`Got metrics for ${key} on retry:`, metrics.length, 'results');
+                if (metrics.length > 0) {
+                  const latestMetric = metrics[metrics.length - 1];
+                  if (latestMetric.evaluation_result) {
+                    newMetricsData[key] = {
+                      tool: tool.id,
+                      corpus: targetCorpus,
+                      corpusVersion: targetVersion,
+                      ...latestMetric.evaluation_result
+                    };
+                    console.log(`Added metrics data for ${key} on retry`);
+                  }
+                }
+              }
+            } else {
+              console.log(`Failed to fetch metrics for ${key} on retry:`, retryResponse.status, retryResponse.statusText);
+            }
           } else {
             console.log(`Failed to fetch metrics for ${key}:`, response.status, response.statusText);
           }
         } catch (error) {
           if (error.name !== 'AbortError') {
-            console.warn(`Failed to fetch metrics for ${tool.id} on ${corpus.name}:`, error);
+            console.warn(`Failed to fetch metrics for ${tool.id} on ${targetCorpus}:`, error);
             // If we get a timeout error, wait longer before continuing
             if (error.message.includes('timeout') || error.message.includes('QueuePool')) {
-              console.log('Detected timeout error, waiting 1 second before continuing...');
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              console.log('Detected timeout error, waiting 3 seconds before continuing...');
+              await new Promise(resolve => setTimeout(resolve, 3000));
             }
           }
           // Continue with other tools even if one fails
@@ -381,27 +417,29 @@ export function useEvaluationPreload() {
       
       // Only update state if request wasn't cancelled
       if (!metricsAbortController.current.signal.aborted) {
-        console.log('Setting refreshed metrics data:', Object.keys(newMetricsData).length, 'entries');
-        // Merge new data with existing data instead of replacing it
+        console.log('Updating metrics data with:', Object.keys(newMetricsData).length, 'entries');
         setMetricsData(prevData => ({
           ...prevData,
           ...newMetricsData
         }));
-        setLastFetchTime(Date.now());
-        setHasInitialData(true);
-        // Truncate version to first 8 characters for display
+        
+        // Update last updated corpus with truncated version
         const shortVersion = targetVersion.length > 8 ? targetVersion.substring(0, 8) + '...' : targetVersion;
         setLastUpdatedCorpus(`${targetCorpus} (${shortVersion})`);
       }
     } catch (error) {
       if (error.name !== 'AbortError') {
         console.error('Error in refreshData:', error);
-        setError('Error refreshing data: ' + error.message);
+        setError('Error refreshing metrics: ' + error.message);
       }
     } finally {
+      console.log('Refresh completed, cleaning up...');
       setIsLoading(false);
-      metricsAbortController.current = null;
-      stopLoading(); // Re-enable navigation after refresh
+      stopLoading();
+      if (metricsAbortController.current) {
+        metricsAbortController.current.abort();
+        metricsAbortController.current = null;
+      }
     }
   };
 

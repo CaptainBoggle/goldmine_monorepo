@@ -93,7 +93,6 @@ async def calculate_and_store_metrics(
                 flat_ground_truth.append([match.id for match in sentence_ground_truth])
                 flat_predictions.append([])
 
-
     evaluation_result = calculate_evaluation_metrics(flat_predictions, flat_ground_truth)
 
     metric = Metric(
@@ -117,11 +116,15 @@ async def get_metrics(
     session: Session = Depends(get_db_session),
 ):
     """Get all evaluation metrics for a given tool on a specific corpus."""
-    statement = (
-        select(Metric)
-        .where(Metric.tool_name == tool_name)
-        .where(Metric.corpus_name == corpus_name)
-        .where(Metric.corpus_version == corpus_version)
-    )
-    metrics = list(session.exec(statement).all())
-    return metrics
+    try:
+        statement = (
+            select(Metric)
+            .where(Metric.tool_name == tool_name)
+            .where(Metric.corpus_name == corpus_name)
+            .where(Metric.corpus_version == corpus_version)
+        )
+        metrics = list(session.exec(statement).all())
+        return metrics
+    finally:
+        # Ensure session is properly closed to release connection
+        session.close()

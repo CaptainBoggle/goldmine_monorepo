@@ -25,7 +25,7 @@
 }
 
 .performance-metrics-grid {
-  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4;
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4;
 }
 
 .performance-metric {
@@ -46,6 +46,10 @@
 
 .performance-metric-f1 {
   @apply bg-orange-50;
+}
+
+.performance-metric-jaccard {
+  @apply bg-violet-50;
 }
 
 .performance-metric-value {
