@@ -1,11 +1,17 @@
 import { Navigation } from './components';
-import { InferencePage, PerformancePage, AboutPage } from './pages';
-import { useTools, useApiCall, useNavigation } from './hooks';
+import { InferencePage, PerformancePage, AboutPage, EvaluationPage } from './pages';
+import { useTools, useApiCall, useNavigation, useEvaluationPreload } from './hooks';
+import { LoadingProvider, useLoading } from './contexts/LoadingContext';
+import { EvaluationProvider } from './contexts/EvaluationContext';
 
-function App() {
+function AppContent() {
   const { tools, selectedTool, setSelectedTool, error: toolsError, fetchTools } = useTools();
   const { loading, result, error: apiError, callApi } = useApiCall();
   const { activeTab, setActiveTab } = useNavigation();
+  const { isGlobalLoading } = useLoading();
+  
+  // Preload evaluation data
+  const evaluationData = useEvaluationPreload();
 
   // Create a wrapper function for callApi that includes the selectedTool
   const handleApiCall = (endpoint, method = 'GET', body = null) => {
@@ -13,50 +19,73 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-        <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
+    <EvaluationProvider evaluationData={evaluationData}>
+      <div className="min-h-screen bg-gray-50">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+          <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        {/* Error Display */}
-        {(toolsError || apiError) && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
-            <div className="text-red-700">
-              {toolsError && (
-                <div className="mb-2">
-                  <p className="font-medium">Tools Error: {toolsError}</p>
-                  <button 
-                    onClick={fetchTools}
-                    className="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm"
-                  >
-                    Retry Fetch Tools
-                  </button>
-                </div>
-              )}
-              {apiError && (
-                <p className="font-medium">API Error: {apiError}</p>
-              )}
+          {/* Error Display */}
+          {(toolsError || apiError || evaluationData.error) && (
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+              <div className="text-red-700">
+                {toolsError && (
+                  <div className="mb-2">
+                    <p className="font-medium">Tools Error: {toolsError}</p>
+                    <button 
+                      onClick={fetchTools}
+                      className="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm"
+                    >
+                      Retry Fetch Tools
+                    </button>
+                  </div>
+                )}
+                {apiError && (
+                  <p className="font-medium">API Error: {apiError}</p>
+                )}
+                {evaluationData.error && (
+                  <div className="mb-2">
+                    <p className="font-medium">Evaluation Data Error: {evaluationData.error}</p>
+                    <button 
+                      onClick={evaluationData.retryFetchAll}
+                      className="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-sm"
+                    >
+                      Retry Fetch Evaluation Data
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-
-        <main className="mt-6 sm:mt-8 lg:mt-12">
-          {activeTab === 'Inference' && (
-            <InferencePage
-              tools={tools}
-              selectedTool={selectedTool}
-              setSelectedTool={setSelectedTool}
-              callApi={handleApiCall}
-              loading={loading}
-              result={result}
-            />
           )}
 
-          {activeTab === 'Performance' && <PerformancePage />}
+          <main className="mt-6 sm:mt-8 lg:mt-12">
+            {activeTab === 'Inference' && (
+              <InferencePage
+                tools={tools}
+                selectedTool={selectedTool}
+                setSelectedTool={setSelectedTool}
+                callApi={handleApiCall}
+                loading={loading}
+                result={result}
+              />
+            )}
 
-          {activeTab === 'About' && <AboutPage />}
-        </main>
+            {activeTab === 'Performance' && <PerformancePage />}
+
+            {activeTab === 'Evaluation' && <EvaluationPage />}
+
+            {activeTab === 'About' && <AboutPage />}
+          </main>
+        </div>
       </div>
-    </div>
+    </EvaluationProvider>
+  );
+}
+
+function App() {
+  return (
+    <LoadingProvider>
+      <AppContent />
+    </LoadingProvider>
   );
 }
 

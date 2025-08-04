@@ -357,6 +357,7 @@ class EvaluationResult(SQLModel):
     f1: float
     precision: float
     recall: float
+    jaccard: float
 
 
 class Metric(SQLModel, table=True):

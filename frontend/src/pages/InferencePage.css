@@ -12,6 +12,10 @@
   @apply space-y-6;
 }
 
+.inference-center {
+  @apply space-y-6;
+}
+
 .inference-card {
   @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
 }

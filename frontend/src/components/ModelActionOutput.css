@@ -1,0 +1,185 @@
+.model-action-output-container {
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  margin-top: 1rem;
+}
+
+.model-action-output-loading {
+  color: #64748b;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
+}
+
+.model-action-output-raw {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 1rem;
+  border-radius: 6px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
+/* Status Output */
+.model-action-output-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-ready {
+  background-color: #10b981;
+}
+
+.status-loading {
+  background-color: #f59e0b;
+  animation: pulse 2s infinite;
+}
+
+.status-error {
+  background-color: #ef4444;
+}
+
+.status-unloaded {
+  background-color: #6b7280;
+}
+
+.status-text {
+  font-size: 1rem;
+  color: #374151;
+}
+
+.status-message {
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* Info Output */
+.model-action-output-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.info-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.info-name {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.info-version {
+  background: #3b82f6;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.info-description {
+  color: #4b5563;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.info-author {
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* Load Output */
+.model-action-output-load {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.load-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.load-text {
+  font-size: 1rem;
+  color: #374151;
+}
+
+.load-time {
+  color: #059669;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.load-message {
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* Unload Output */
+.model-action-output-unload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.unload-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.unload-text {
+  font-size: 1rem;
+  color: #374151;
+}
+
+.unload-message {
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* Unknown Output */
+.model-action-output-unknown {
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+} 

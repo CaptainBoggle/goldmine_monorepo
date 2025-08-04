@@ -1,9 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLoading } from '../contexts/LoadingContext';
 
 export function useApiCall() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState('');
   const [error, setError] = useState('');
+  
+  const { startLoading, stopLoading } = useLoading();
+
+  // Load result from localStorage on mount
+  useEffect(() => {
+    const savedResult = localStorage.getItem('inference_result');
+    if (savedResult) {
+      setResult(savedResult);
+    }
+  }, []);
 
   const callApi = async (selectedTool, endpoint, method = 'GET', body = null) => {
     if (!selectedTool) {
@@ -14,6 +25,7 @@ export function useApiCall() {
     setLoading(true);
     setResult('');
     setError('');
+    startLoading(); // Prevent navigation during API call
 
     try {
       const response = await fetch(`/api/proxy/${selectedTool}${endpoint}`, {
@@ -34,8 +46,11 @@ export function useApiCall() {
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
         const data = await response.json();
-        setResult(JSON.stringify(data, null, 2));
-        setError(''); // Clear any previous errors
+        const resultString = JSON.stringify(data, null, 2);
+        setResult(resultString);
+        // Save result to localStorage for persistence
+        localStorage.setItem('inference_result', resultString);
+        setError('');
       } else {
         const errorText = await response.text();
         console.error('Non-JSON response:', errorText);
@@ -48,12 +63,14 @@ export function useApiCall() {
       setResult(`Error: ${err.message}`);
     } finally {
       setLoading(false);
+      stopLoading();
     }
   };
 
   const clearResult = () => {
     setResult('');
     setError('');
+    localStorage.removeItem('inference_result');
   };
 
   return {
