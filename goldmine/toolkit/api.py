@@ -1,8 +1,20 @@
+import re
+import io
 from fastapi import FastAPI, HTTPException
-
+from cassis import load_typesystem, load_cas_from_xmi
 from goldmine.toolkit.interface import ModelInterface
 
-from ..types import LoadResponse, ToolInfo, ToolInput, ToolResponse, ToolBatchInput, ToolBatchResponse, ToolStatus
+from ..types import (
+	LoadResponse, 
+	ToolInfo,
+	ToolInput, 
+	ToolResponse, 
+	ToolBatchInput, 
+	ToolBatchResponse, 
+	ToolStatus, 
+	ExternalRecommenderPredictRequest,
+    ExternalRecommenderPredictResponse
+)
 
 
 def create_app(model_implementation: ModelInterface):
@@ -82,6 +94,65 @@ def create_app(model_implementation: ModelInterface):
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"An unexpected error occurred during prediction: {str(e)}"
+            )
+    
+    @app.post("/external-recommender/predict")
+    async def external_recommender_predict(
+        request: ExternalRecommenderPredictRequest,
+    ) -> ExternalRecommenderPredictResponse:
+        """
+        INCEpTION External Recommender API endpoint.
+        This endpoint follows the INCEpTION specification for external recommenders.
+        """
+        try:
+            print("Received request:", request) # debugging
+            print("Request metadata:", request.request_metadata) # debuggin
+
+            # Load type system and CAS
+            typesystem = load_typesystem(io.BytesIO(request.type_system.encode("utf-8")))
+            cas = load_cas_from_xmi(io.BytesIO(request.document.xmi.encode("utf-8")), typesystem=typesystem)
+
+            layer_name = request.request_metadata.layer
+            feature_name = request.request_metadata.feature
+            AnnotationType = typesystem.get_type(layer_name)
+
+            view = cas.get_view('_InitialView')
+            text = view.sofa_string
+            print("Text from _InitialView:", repr(text)) # debuggin
+
+            # Run prediction using the model interface
+            tool_input = ToolInput(sentences=[text])
+            tool_output = await model_implementation.predict(tool_input)
+
+            for match in tool_output.results[0]:
+                match_text = match.match_text or ""
+
+                # Match all occurrences of the match_text
+                for occurrence in re.finditer(re.escape(match_text), text):
+                    begin, end = occurrence.start(), occurrence.end()
+
+                    annotation = AnnotationType(
+                        begin=begin,
+                        end=end,
+                        **{
+                            feature_name: f"http://purl.obolibrary.org/obo/{match.id.replace(':', '_')}",
+                            f"{feature_name}_score": 1.0,  # Assuming a score of 1.0 for simplicity
+                            f"{feature_name}_score_explanation": f"Predicted by tool {model_implementation.get_info().name}",
+                            "inception_internal_predicted": True
+                        }
+                    )
+                    cas.add(annotation)
+
+            annotated_xmi = cas.to_xmi()
+            return ExternalRecommenderPredictResponse(document=annotated_xmi)
+
+        except HTTPException as e:
+            raise e
+        except Exception as e:
+            print(f"Error in external recommender predict: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"An unexpected error occurred in external recommender: {str(e)}"
             )
 
     return app
