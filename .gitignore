@@ -15,3 +15,5 @@ __pycache__/
 .Trashes
 
 /frontend/node_modules/
+
+/tools/hpo-agent/huggingface
