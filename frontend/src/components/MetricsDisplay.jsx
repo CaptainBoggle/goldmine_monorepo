@@ -46,6 +46,12 @@ function MetricsDisplay({ metrics, dataSource }) {
           </div>
           <div className="performance-metric-label">F1 Score</div>
         </div>
+        <div className="performance-metric performance-metric-jaccard">
+          <div className="performance-metric-value text-violet-600">
+            {formatMetricValue(metrics.jaccard)}
+          </div>
+          <div className="performance-metric-label">Jaccard</div>
+        </div>
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ const METRICS = [
   { key: 'precision', label: 'Precision', color: '#10b981' },
   { key: 'recall', label: 'Recall', color: '#f59e0b' },
   { key: 'f1', label: 'F1', color: '#ef4444' },
+  { key: 'jaccard', label: 'Jaccard', color: '#8b5cf6' },
 ];
 
 function BarChart({ selectedCorpora, selectedMetrics, metricsData, tools }) {
@@ -209,6 +210,7 @@ function EvaluationPage() {
 
   // Get unique corpus names and their versions from the data
   const availableCorpora = useMemo(() => {
+    // First, get corpora from metrics data (existing data)
     const corpusMap = new Map();
     Object.values(metricsData).forEach(data => {
       if (!corpusMap.has(data.corpus)) {
@@ -217,12 +219,20 @@ function EvaluationPage() {
       corpusMap.get(data.corpus).add(data.corpusVersion);
     });
     
+    // Also include all corpora from the corpora list (even if no metrics yet)
+    corpora.forEach(corpus => {
+      if (!corpusMap.has(corpus.name)) {
+        corpusMap.set(corpus.name, new Set());
+      }
+      corpusMap.get(corpus.name).add(corpus.corpus_version);
+    });
+    
     // Convert to array of objects with corpus name and versions
     return Array.from(corpusMap.entries()).map(([corpusName, versions]) => ({
       name: corpusName,
       versions: Array.from(versions).sort()
     })).sort((a, b) => a.name.localeCompare(b.name));
-  }, [metricsData]);
+  }, [metricsData, corpora]);
 
   // Get available versions for the selected corpus
   const availableVersions = useMemo(() => {
@@ -267,6 +277,7 @@ function EvaluationPage() {
         precision: (data.precision || 0) * 100, // Convert to percentage
         recall: (data.recall || 0) * 100, // Convert to percentage
         f1: (data.f1 || 0) * 100, // Convert to percentage
+        jaccard: (data.jaccard || 0) * 100, // Convert to percentage
       }));
   };
 
@@ -278,7 +289,8 @@ function EvaluationPage() {
       accuracy: Math.max(...data.map(d => d.accuracy)),
       precision: Math.max(...data.map(d => d.precision)),
       recall: Math.max(...data.map(d => d.recall)),
-      f1: Math.max(...data.map(d => d.f1))
+      f1: Math.max(...data.map(d => d.f1)),
+      jaccard: Math.max(...data.map(d => d.jaccard))
     };
     
     return bestScores;
@@ -440,6 +452,7 @@ function EvaluationPage() {
                     <th>Precision</th>
                     <th>Recall</th>
                     <th>F1</th>
+                    <th>Jaccard</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -469,6 +482,12 @@ function EvaluationPage() {
                         fontWeight: result.f1 === bestScores.f1 ? '600' : '400'
                       }}>
                         {result.f1.toFixed(1)}%
+                      </td>
+                      <td style={{ 
+                        color: result.jaccard === bestScores.jaccard ? '#10b981' : '#374151',
+                        fontWeight: result.jaccard === bestScores.jaccard ? '600' : '400'
+                      }}>
+                        {result.jaccard.toFixed(1)}%
                       </td>
                     </tr>
                   ))}
