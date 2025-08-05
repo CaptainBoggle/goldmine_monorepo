@@ -12,3 +12,4 @@ tools/hpo-agent/hpo_vector_db/collection filter=lfs diff=lfs merge=lfs -text
 tools/hpo-agent/hpo_vector_db/collection/hpo_2024-04-19 filter=lfs diff=lfs merge=lfs -text
 tools/hpo-agent/hpo_vector_db/collection/hpo_2024-04-19/storage.sqlite filter=lfs diff=lfs merge=lfs -text
 tools/hpo-agent/hpo_vector_db/meta.json filter=lfs diff=lfs merge=lfs -text
+tools/fast_hpo_cr/index/hp.index filter=lfs diff=lfs merge=lfs -text
