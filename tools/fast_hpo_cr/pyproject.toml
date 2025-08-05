@@ -1,0 +1,17 @@
+[project]
+name = "fast_hpo_cr"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "fasthpocr>=0.1.4",
+    "goldmine",
+    "pronto>=2.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.1.0"
+]
+
+[tool.uv.sources]
+goldmine = { path = "../../goldmine" }

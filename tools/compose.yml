@@ -1,15 +1,16 @@
 services:
-  example-model:
-    build:
-      context: ..
-      dockerfile: tools/example_model/Dockerfile
-    container_name: example-model
-    networks:
-      - goldmine-network
-    ports:
-      - "6000:8000"  # each model needs its own port for access outside the container
-      # To the other services, this will be accessible at http://example-model:8000/
-      # but from the host, it will be at http://localhost:6000/
+
+  # example-model:
+  #   build:
+  #     context: ..
+  #     dockerfile: tools/example_model/Dockerfile
+  #   container_name: example-model
+  #   networks:
+  #     - goldmine-network
+  #   ports:
+  #     - "6000:8000"  # each model needs its own port for access outside the container
+  #     # To the other services, this will be accessible at http://example-model:8000/
+  #     # but from the host, it will be at http://localhost:6000/
 
   phenotagger:
     build:
@@ -56,3 +57,13 @@ services:
       - ./hpo-agent/hpo:/app/tools/hpo-agent/hpo
       - ./hpo-agent/hpo_vector_db:/app/tools/hpo-agent/hpo_vector_db
       - ./hpo-agent/huggingface:/app/huggingface
+
+  fast_hpo_cr:
+    build:
+      context: ..
+      dockerfile: tools/fast_hpo_cr/Dockerfile
+    container_name: fast_hpo_cr
+    networks:
+      - goldmine-network
+    ports:
+      - "6005:8000"
