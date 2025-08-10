@@ -8,7 +8,7 @@ function TextInput({ input, setInput }) {
         className="text-input-field"
         rows={3}
         value={input}
-        onChange={e => setInput(e.target.value)}
+        onChange={e => setInput && setInput(e.target.value)}
       />
     </div>
   );

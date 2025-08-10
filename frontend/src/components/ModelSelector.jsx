@@ -7,7 +7,7 @@ function ModelSelector({ tools, selectedTool, setSelectedTool }) {
       <select
         className="model-selector-select"
         value={selectedTool}
-        onChange={e => setSelectedTool(e.target.value)}
+        onChange={e => setSelectedTool && setSelectedTool(e.target.value)}
       >
         {tools.map(t => (
           <option key={t.id} value={t.id}>
