@@ -6,6 +6,11 @@ Simple testing setup for the Goldmine frontend using Docker.
 
 ### Run All Tests
 
+**All Tests (in frontend):**
+```bash
+npm test -- --watchAll=false
+```
+
 **Pages Tests:**
 ```bash
 ./test-pages.sh
