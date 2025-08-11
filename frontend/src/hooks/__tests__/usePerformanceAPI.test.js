@@ -166,8 +166,6 @@ describe('usePerformanceAPI', () => {
     expect(typeof result.current.loadModel).toBe('function');
     expect(typeof result.current.handlePredict).toBe('function');
     expect(typeof result.current.handleEvaluate).toBe('function');
-    expect(typeof result.current.handleCancelPredict).toBe('function');
-    expect(typeof result.current.handleCancelEvaluate).toBe('function');
     expect(typeof result.current.clearError).toBe('function');
     expect(typeof result.current.clearSuccess).toBe('function');
   });
@@ -322,8 +320,6 @@ describe('usePerformanceAPI', () => {
       expect(() => result.current.loadModel()).not.toThrow();
       expect(() => result.current.handlePredict()).not.toThrow();
       expect(() => result.current.handleEvaluate()).not.toThrow();
-      expect(() => result.current.handleCancelPredict()).not.toThrow();
-      expect(() => result.current.handleCancelEvaluate()).not.toThrow();
     });
   });
 
@@ -359,13 +355,6 @@ describe('usePerformanceAPI', () => {
       expect(typeof result.current.handlePredict).toBe('function');
       expect(() => result.current.handlePredict()).not.toThrow();
     });
-
-    it('handleCancelPredict function exists and is callable', () => {
-      const { result } = renderHook(() => usePerformanceAPI());
-
-      expect(typeof result.current.handleCancelPredict).toBe('function');
-      expect(() => result.current.handleCancelPredict()).not.toThrow();
-    });
   });
 
   describe('evaluation functionality', () => {
@@ -374,13 +363,6 @@ describe('usePerformanceAPI', () => {
 
       expect(typeof result.current.handleEvaluate).toBe('function');
       expect(() => result.current.handleEvaluate()).not.toThrow();
-    });
-
-    it('handleCancelEvaluate function exists and is callable', () => {
-      const { result } = renderHook(() => usePerformanceAPI());
-
-      expect(typeof result.current.handleCancelEvaluate).toBe('function');
-      expect(() => result.current.handleCancelEvaluate()).not.toThrow();
     });
   });
 }); 

@@ -69,46 +69,30 @@ jest.mock('../../components', () => ({
       </select>
     </div>
   ),
-  PerformanceActionButtons: ({ 
-    isPredicting, 
-    isEvaluating, 
-    selectedTool, 
-    selectedCorpus, 
+    PerformanceActionButtons: ({
+    isPredicting,
+    isEvaluating,
+    selectedTool,
+    selectedCorpus,
     selectedCorpusVersion,
     modelStatus,
     onPredict,
-    onEvaluate,
-    onCancelPredict,
-    onCancelEvaluate 
+    onEvaluate
   }) => (
     <div data-testid="performance-action-buttons">
       <button 
         onClick={onPredict}
-        disabled={!selectedTool || !selectedCorpus || !selectedCorpusVersion || modelStatus !== 'loaded'}
+        disabled={isPredicting || isEvaluating || !selectedTool || !selectedCorpus || !selectedCorpusVersion || modelStatus !== 'loaded'}
         data-testid="predict-btn"
       >
-        {isPredicting ? 'Predicting...' : 'Predict'}
+        {isPredicting ? 'Predicting...' : 'Check/Run Predictions'}
       </button>
       <button 
         onClick={onEvaluate}
-        disabled={!selectedTool || !selectedCorpus || !selectedCorpusVersion || modelStatus !== 'loaded'}
+        disabled={isPredicting || isEvaluating || !selectedTool || !selectedCorpus || !selectedCorpusVersion || modelStatus !== 'loaded'}
         data-testid="evaluate-btn"
       >
-        {isEvaluating ? 'Evaluating...' : 'Evaluate'}
-      </button>
-      <button 
-        onClick={onCancelPredict}
-        disabled={!isPredicting}
-        data-testid="cancel-predict-btn"
-      >
-        Cancel Prediction
-      </button>
-      <button 
-        onClick={onCancelEvaluate}
-        disabled={!isEvaluating}
-        data-testid="cancel-evaluate-btn"
-      >
-        Cancel Evaluation
+        {isEvaluating ? 'Calculating...' : 'Calculate Metrics'}
       </button>
     </div>
   ),
@@ -180,8 +164,6 @@ describe('PerformancePage', () => {
     loadModel: jest.fn(),
     handlePredict: jest.fn(),
     handleEvaluate: jest.fn(),
-    handleCancelPredict: jest.fn(),
-    handleCancelEvaluate: jest.fn(),
     clearError: jest.fn(),
     clearSuccess: jest.fn(),
   };

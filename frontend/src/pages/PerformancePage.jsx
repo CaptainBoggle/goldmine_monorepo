@@ -33,8 +33,6 @@ function PerformancePage() {
     loadModel,
     handlePredict,
     handleEvaluate,
-    handleCancelPredict,
-    handleCancelEvaluate,
     clearError,
     clearSuccess,
   } = usePerformanceAPI();
@@ -90,8 +88,6 @@ function PerformancePage() {
             modelStatus={modelStatus}
             onPredict={handlePredict}
             onEvaluate={handleEvaluate}
-            onCancelPredict={handleCancelPredict}
-            onCancelEvaluate={handleCancelEvaluate}
           />
         </div>
 

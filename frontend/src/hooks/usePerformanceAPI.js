@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useLoading } from '../contexts/LoadingContext';
 
 export function usePerformanceAPI() {
@@ -17,10 +17,6 @@ export function usePerformanceAPI() {
   const [modelStatus, setModelStatus] = useState('');
   
   const { startLoading, stopLoading } = useLoading();
-
-  // AbortController refs for cancellation
-  const predictAbortController = useRef(null);
-  const evaluateAbortController = useRef(null);
 
   // Auto-clear errors after 10 seconds
   useEffect(() => {
@@ -53,18 +49,6 @@ export function usePerformanceAPI() {
       setModelStatus('');
     }
   }, [selectedTool]);
-
-  // Cleanup abort controllers on unmount
-  useEffect(() => {
-    return () => {
-      if (predictAbortController.current) {
-        predictAbortController.current.abort();
-      }
-      if (evaluateAbortController.current) {
-        evaluateAbortController.current.abort();
-      }
-    };
-  }, []);
 
   const loadModel = async () => {
     if (!selectedTool) return;
@@ -199,9 +183,6 @@ export function usePerformanceAPI() {
     setSuccess('');
     startLoading(); // Prevent navigation during prediction
 
-    // Create new AbortController for this prediction
-    predictAbortController.current = new AbortController();
-
     try {
       // Check if predictions already exist
       const predictionsExist = await checkExistingPredictions();
@@ -215,7 +196,6 @@ export function usePerformanceAPI() {
           `/api/predictions/${selectedTool}/${selectedCorpus}/${selectedCorpusVersion}/predict`,
           {
             method: 'POST',
-            signal: predictAbortController.current.signal,
           }
         );
 
@@ -243,22 +223,11 @@ export function usePerformanceAPI() {
         }
       }
     } catch (error) {
-      if (error.name === 'AbortError') {
-        setError('Prediction was cancelled by user');
-      } else {
-        console.error('Prediction error:', error);
-        setError('Error running prediction: ' + error.message);
-      }
+      console.error('Prediction error:', error);
+      setError('Error running prediction: ' + error.message);
     } finally {
       setIsPredicting(false);
-      predictAbortController.current = null;
       stopLoading();
-    }
-  };
-
-  const handleCancelPredict = () => {
-    if (predictAbortController.current) {
-      predictAbortController.current.abort();
     }
   };
 
@@ -295,9 +264,6 @@ export function usePerformanceAPI() {
     setSuccess('');
     startLoading(); // Prevent navigation during evaluation
 
-    // Create new AbortController for this evaluation
-    evaluateAbortController.current = new AbortController();
-
     try {
       // Check if metrics already exist
       const existingMetrics = await checkExistingMetrics();
@@ -328,7 +294,6 @@ export function usePerformanceAPI() {
           `/api/metrics/${selectedTool}/${selectedCorpus}/${selectedCorpusVersion}`,
           {
             method: 'POST',
-            signal: evaluateAbortController.current.signal,
           }
         );
 
@@ -357,21 +322,10 @@ export function usePerformanceAPI() {
         }
       }
     } catch (error) {
-      if (error.name === 'AbortError') {
-        setError('Evaluation was cancelled by user');
-      } else {
-        setError('Error running evaluation: ' + error.message);
-      }
+      setError('Error running evaluation: ' + error.message);
     } finally {
       setIsEvaluating(false);
-      evaluateAbortController.current = null;
       stopLoading();
-    }
-  };
-
-  const handleCancelEvaluate = () => {
-    if (evaluateAbortController.current) {
-      evaluateAbortController.current.abort();
     }
   };
 
@@ -403,8 +357,6 @@ export function usePerformanceAPI() {
     loadModel,
     handlePredict,
     handleEvaluate,
-    handleCancelPredict,
-    handleCancelEvaluate,
     clearError,
     clearSuccess,
   };
