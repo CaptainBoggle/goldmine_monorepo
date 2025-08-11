@@ -33,7 +33,7 @@ npm test -- --watchAll=false
 
 ### Run Coverage Report
 ```bash
-docker run --rm goldmine-frontend-test npm test -- --coverage
+npm run test:coverage
 ```
 
 ## 📁 Test Structure
