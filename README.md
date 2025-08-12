@@ -1,101 +1,181 @@
 # Goldmine
 
+Goldmine is a modular platform for benchmarking Human Phenotype Ontology (HPO) extraction models across versioned evaluation corpora.
+
+## What It Does
+- Ingests curated corpora (versioned) into a PostgreSQL database.
+- Runs multiple phenotype extraction tools (each isolated in its own container) on those corpora.
+- Stores predictions & computes sentence‑level multilabel metrics (accuracy, precision, recall, F1, Jaccard).
+- Exposes data + operations via a FastAPI backend and a React frontend.
+
+## Stack
+| Component | Tech | Default URL |
+|-----------|------|-------------|
+| Frontend UI | React + Tailwind | http://localhost:3000 |
+| Backend API | FastAPI | http://localhost:8000 |
+| Database | PostgreSQL | localhost:5432 |
+| Tools (models) | FastAPI microservices | 6001+ |
+
+## Prerequisites
+1. Git and Git LFS.
+   - macOS: `brew install git git-lfs`
+   - Enable LFS (once globally): `git lfs install`
+2. Docker Desktop (latest stable). Confirm with `docker --version`.
+3. Sufficient disk space (model weights + corpora can be several GB with LFS content pulled).
+4. (Optional) `uv` for Python dependency workflows outside containers:
+   - Install: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
+## Cloning (With Submodules & LFS)
+Recommended single command (fresh clone):
 ```bash
-# run
-docker compose up
-```
-
-## External access
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- PostgreSQL: http://localhost:5432
-- Example Model: http://localhost:6000
-- PhenoTagger Model: http://localhost:6001
-
-## Data Management
-
-The `.data` folder contains pre-loaded predictions and evaluation results to avoid re-running expensive operations. This data is committed to the repository for faster development and consistent results across team members.
-
-**Key benefits:**
-- **Faster startup** - No need to re-run predictions
-- **Consistent results** - Same data across all team members  
-- **Version control** - Track changes to predictions and metrics
-- **Easy collaboration** - New team members get pre-loaded data
-
-
-## Development
-First, ensure git and git-lfs are installed. The latter is required for cloning large model weight files.
-
-Clone repo and submodules:
-```
-git clone https://github.com/unsw-cse-comp99-3900/capstone-project-3900-t18a-date.git
+git clone --recurse-submodules https://github.com/unsw-cse-comp99-3900/capstone-project-3900-t18a-date.git
 cd capstone-project-3900-t18a-date
+# Ensure all nested submodules are initialised
 git submodule update --init --recursive
+# Fetch large files tracked by LFS
+git lfs pull
+```
+If you already cloned without submodules:
+```bash
+git submodule update --init --recursive
+git lfs pull
+```
+To update later (bring submodules + LFS current):
+```bash
+git pull --rebase
+git submodule update --init --recursive
+git lfs pull
 ```
 
-## Adding New Tools
-1. Create tool directory in `tools/`
-2. Implement `ModelInterface` from `goldmine.toolkit.interface`
-3. Implement tool logic in `tools/my-tool/tool.py`
-4. Create `app.py` in the tool directory to expose the FastAPI app
-5. Create `Dockerfile` in the tool directory to build the tool image
-6. Add tool to compose.yml in tools/
-7. Create `pyproject.toml` in the tool directory to manage dependencies
-8. Backend auto-discovers tools from compose file :rocket:
-
-## Local Development
+## Adding a New Git Submodule
+Use submodules only for external code such as tool sources or corpora that you want to track as part of the repository.
 ```bash
-# Rebuild after code changes
+# Add (example: external lib into externals/my-lib)
+git submodule add https://github.com/owner/repo.git externals/my-lib
+# Commit the new .gitmodules entry and submodule reference
+git add .gitmodules externals/my-lib
+git commit -m "Add submodule externals/my-lib"
+```
+Update a submodule to latest upstream main:
+```bash
+cd externals/my-lib
+git fetch origin
+git checkout origin/main
+cd ../../
+git add externals/my-lib
+git commit -m "Update submodule my-lib"
+```
+Remove a submodule:
+```bash
+git submodule deinit -f externals/my-lib
+rm -rf .git/modules/externals/my-lib
+rm -rf externals/my-lib
+git add .gitmodules
+git commit -m "Remove submodule my-lib"
+```
+
+## Tracking New Large Files with Git LFS
+1. Decide what to track (model weights, large embeddings, > ~10MB).
+2. Add pattern(s):
+```bash
+git lfs track "tools/phenobert/externals/*.bin"
+git lfs track "corpora/*/externals/**/*.zip"
+```
+3. Commit the updated `.gitattributes`:
+```bash
+git add .gitattributes
+git add path/to/large/file
+git commit -m "Track large model weights with LFS"
+```
+4. Push as usual (`git push`). LFS pointers are stored in Git; binaries in LFS storage.
+
+Verify LFS status:
+```bash
+git lfs ls-files
+```
+If you accidentally committed a large file without LFS, use `git lfs migrate import --include=path/to/file` (warning: this rewrites history).
+
+## Quick Start (Docker)
+Run the full stack (frontend + backend + database + tools):
+```bash
+docker compose up --build
+```
+Then visit:
+- UI: http://localhost:3000
+- API docs: http://localhost:3000/api/docs
+- API root: http://localhost:8000 OR http://localhost:3000/api
+
+Stop & remove containers (data persisted in `.data/`):
+```bash
 docker compose down
-docker compose build
-docker compose up
+```
+Rebuild after code changes:
+```bash
+docker compose build && docker compose up
+```
+Clean rebuild (ignore cache):
+```bash
+docker compose build --no-cache && docker compose up
 ```
 
-```bash
-# rebuild without cache if it's not working
-docker compose down
-docker compose build --no-cache
-docker compose up
+## Repository Layout
+```
+backend/     FastAPI service (ingestion, proxy, metrics)
+frontend/    React application
+corpora/     Versioned evaluation corpora + parsers
+tools/       Model/tool containers (discovered at backend startup)
+experiments/ Research & prototype training scripts
+goldmine/    Shared Python package (types, toolkit interfaces)
+.data/       Persistent volume (Postgres data, cached predictions/metrics)
 ```
 
-## Python Development (uv)
+## Data Persistence
+The `.data` directory (host-mounted) retains:
+- PostgreSQL data (`.data/postgres_data/`)
+- Cached predictions / metrics (where applicable)
+
+Deleting `.data` forces a clean ingest + recomputation on next startup.
+
+## Development Notes
+Most work only needs `docker compose up`.
+If you want to run backend code locally (outside Docker):
 ```bash
-# Install uv if you don't have it
-# curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Initialise uv, do this in each tool directory,
-# as well as the root directory,
-# and maybe even in the backend directory too lol
-uv sync
-
-# Add dependencies if needed
-uv add package-name
-
-# Update lockfile after adding dependencies
-uv lock
+cd backend
+uv sync --frozen --package goldmine-backend
+export DATABASE_URL=postgresql://postgres:password@localhost:5432/postgres
+uv run uvicorn app.main:app --reload --port 8000
 ```
+(You still need PostgreSQL running; easiest is to keep `docker compose up database`.)
 
-## Code Formatting & Linting (ruff)
+Formatting & linting (repo root):
 ```bash
-# Install dev dependencies (includes ruff)
 uv sync --extra dev
-
-# Format code
 uv run ruff format .
-
-# Check linting
 uv run ruff check .
-
-# Fix auto-fixable linting issues
-uv run ruff check --fix .
-
-# Run both format and check
-uv run ruff format . && uv run ruff check .
 ```
 
+## Troubleshooting
+| Symptom | Check |
+|---------|-------|
+| Missing large files | Run `git lfs pull` |
+| Port conflict | Another process using 3000/8000/5432—stop it or edit compose mapping |
 
-[![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg)](https://classroom.github.com/online_ide?assignment_repo_id=19698121&assignment_repo_type=AssignmentRepo)
+## Updating
+Pull latest + submodules + LFS:
+```bash
+git pull --rebase
+git submodule update --init --recursive
+git lfs pull
+docker compose build --pull
+```
 
 ## Experiments
-We also run some experiments, to identify the effectiveness of various methods for improving HPO id extraction performance. The results and replication code for these experiments are located in the 'experiments' folder:
-- qwen_rlvr: this is an attempt to train the model qwen3-0.6b via the GRPO algorithm to improve it's performance. Weights are in qwen_rlvr/weights
+Experimental training / RL / fine‑tuning lives under `experiments/` (isolated dependencies). 
+
+## Support / Further Docs
+See:
+- `backend/README.md`
+- `tools/README.md`
+- `corpora/README.md`
+- `experiments/README.md`
+
