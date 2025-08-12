@@ -6,6 +6,11 @@ Simple testing setup for the Goldmine frontend using Docker.
 
 ### Run All Tests
 
+**All Tests:**
+```bash
+docker run --rm goldmine-frontend-test npm run test -- --watchAll=false
+```
+
 **All Tests (in frontend):**
 ```bash
 npm test -- --watchAll=false
@@ -37,6 +42,12 @@ npm test -- --watchAll=false
 ```
 
 ### Run Coverage Report
+**Coverage:**
+```bash
+docker run --rm goldmine-frontend-test npm run test:coverage
+```
+
+**Coverage (in frontend):**
 ```bash
 npm run test:coverage
 ```

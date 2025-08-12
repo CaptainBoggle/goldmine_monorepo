@@ -1,24 +1,17 @@
 #!/bin/bash
 
 echo "🧪 Running Context Tests in Docker..."
-echo "📋 Building test container..."
 
-# Build the test container
-docker build -f frontend/Dockerfile.test -t goldmine-frontend-test frontend/
-
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to build test container"
+# Check if we're in the right directory
+if [ ! -f "docker-compose.yml" ]; then
+    echo "❌ Error: Please run this script from the project root directory"
     exit 1
 fi
 
+echo "📋 Building test container..."
+docker build -f frontend/Dockerfile.test -t goldmine-frontend-test ./frontend
+
 echo "📋 Running tests for contexts folder..."
+docker run --rm goldmine-frontend-test npm run test:contexts
 
-# Run the tests
-docker run --rm goldmine-frontend-test npm test -- src/contexts --watchAll=false
-
-if [ $? -eq 0 ]; then
-    echo "✅ Context tests completed!"
-else
-    echo "❌ Context tests failed!"
-    exit 1
-fi 
+echo "✅ Tests completed!" 

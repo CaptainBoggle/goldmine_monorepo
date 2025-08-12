@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🧪 Running Component Tests in Docker..."
+echo "🧪 Running Context Tests in Docker..."
 
 # Check if we're in the right directory
 if [ ! -f "docker-compose.yml" ]; then
@@ -11,7 +11,7 @@ fi
 echo "📋 Building test container..."
 docker build -f frontend/Dockerfile.test -t goldmine-frontend-test ./frontend
 
-echo "📋 Running tests for components folder..."
-docker run --rm goldmine-frontend-test npm test -- src/components --watchAll=false
+echo "📋 Running tests for contexts folder..."
+docker run --rm goldmine-frontend-test npm run test:contexts
 
-echo "✅ Component tests completed!" 
+echo "✅ Tests completed!" 

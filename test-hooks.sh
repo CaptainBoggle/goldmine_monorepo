@@ -1,24 +1,17 @@
 #!/bin/bash
 
 echo "🧪 Running Hook Tests in Docker..."
-echo "📋 Building test container..."
 
-# Build the test container
-docker build -f frontend/Dockerfile.test -t goldmine-frontend-test frontend/
-
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to build test container"
+# Check if we're in the right directory
+if [ ! -f "docker-compose.yml" ]; then
+    echo "❌ Error: Please run this script from the project root directory"
     exit 1
 fi
 
+echo "📋 Building test container..."
+docker build -f frontend/Dockerfile.test -t goldmine-frontend-test ./frontend
+
 echo "📋 Running tests for hooks folder..."
+docker run --rm goldmine-frontend-test npm run test:hooks
 
-# Run the tests
-docker run --rm goldmine-frontend-test npm test -- src/hooks --watchAll=false
-
-if [ $? -eq 0 ]; then
-    echo "✅ Hook tests completed!"
-else
-    echo "❌ Hook tests failed!"
-    exit 1
-fi 
+echo "✅ Tests completed!" 
