@@ -18,6 +18,10 @@
     "test": "react-scripts test",
     "test:all": "react-scripts test --watchAll=false",
     "test:coverage": "react-scripts test --coverage --watchAll=false",
+    "test:pages": "react-scripts test src/pages/__tests__ --watchAll=false",
+    "test:components": "react-scripts test src/components/__tests__ --watchAll=false",
+    "test:contexts": "react-scripts test src/contexts/__tests__ --watchAll=false",
+    "test:hooks": "react-scripts test src/hooks/__tests__ --watchAll=false",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

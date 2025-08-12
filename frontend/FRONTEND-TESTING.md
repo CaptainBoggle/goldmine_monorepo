@@ -87,13 +87,28 @@ These tests verify:
 - Performance with large datasets
 - Real-world usage scenarios
 
+**usePerformanceAPI Integration Tests:**
+```bash
+npm test -- --testPathPattern="usePerformanceAPI.integration.test.js" --watchAll=false
+```
+
+These tests verify:
+- Complete tool selection to evaluation workflow
+- Model loading and status management
+- Prediction and evaluation processes
+- Caching mechanisms for existing data
+- Error handling and recovery scenarios
+- State management during complex operations
+- Performance with large datasets
+- API integration and response handling
+
 ## 📋 Current Test Coverage
 
 - ✅ **Pages**: AboutPage, EvaluationPage, InferencePage, PerformancePage
 - ✅ **Components**: ActionButtons, FileInput, HpoTermList, ModelActionOutput, ModelOutput, ModelSelector, MessageDisplay, TextInput
 - ✅ **Contexts**: LoadingContext, EvaluationContext
 - ✅ **Hooks**: useApiCall, useEvaluationAPI, useEvaluationPreload, useNavigation, usePerformanceAPI, useTools
-- ✅ **Integration Tests**: useEvaluationAPI workflow testing
+- ✅ **Integration Tests**: useEvaluationAPI and usePerformanceAPI workflow testing
 
 
 ## 📖 Resources
