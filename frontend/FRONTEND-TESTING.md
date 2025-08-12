@@ -31,6 +31,11 @@ npm test -- --watchAll=false
 ./test-hooks.sh
 ```
 
+**Integration Tests:**
+```bash
+./test-integration.sh
+```
+
 ### Run Coverage Report
 ```bash
 npm run test:coverage
@@ -43,7 +48,7 @@ frontend/src/
 ├── pages/__tests__/          # Page tests
 ├── components/__tests__/      # Component tests  
 ├── contexts/__tests__/        # Context tests
-└── hooks/__tests__/          # Hook tests
+└── hooks/__tests__/          # Hook tests (including integration tests)
 ```
 
 ## 🧩 Adding New Tests
@@ -66,12 +71,29 @@ describe('YourComponent', () => {
 });
 ```
 
+## 🔗 Integration Tests
+
+Integration tests test how components and hooks work together in realistic scenarios:
+
+**useEvaluationAPI Integration Tests:**
+```bash
+npm test -- --testPathPattern="useEvaluationAPI.integration.test.js" --watchAll=false
+```
+
+These tests verify:
+- Full data fetching workflows
+- Error handling and recovery
+- State management across API calls
+- Performance with large datasets
+- Real-world usage scenarios
+
 ## 📋 Current Test Coverage
 
 - ✅ **Pages**: AboutPage, EvaluationPage, InferencePage, PerformancePage
 - ✅ **Components**: ActionButtons, FileInput, HpoTermList, ModelActionOutput, ModelOutput, ModelSelector, MessageDisplay, TextInput
 - ✅ **Contexts**: LoadingContext, EvaluationContext
 - ✅ **Hooks**: useApiCall, useEvaluationAPI, useEvaluationPreload, useNavigation, usePerformanceAPI, useTools
+- ✅ **Integration Tests**: useEvaluationAPI workflow testing
 
 
 ## 📖 Resources
