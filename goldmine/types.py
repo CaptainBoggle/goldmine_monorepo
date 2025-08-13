@@ -1,10 +1,13 @@
 import re
 from enum import Enum
 from typing import List, Optional
+from unittest.mock import Base
 
-from pydantic import computed_field, field_validator
+from pydantic import BaseModel, ConfigDict, computed_field, field_validator
+from pydantic import Field as BaseField
 from sqlalchemy import JSON
 from sqlmodel import Column, Field, Relationship, SQLModel
+
 
 
 class PhenotypeMatch(SQLModel):
@@ -114,6 +117,64 @@ class UnloadResponse(SQLModel):
         None,
         description="Optional message providing additional information about the unload operation",
     )
+
+
+# External Recommender API types (INCEpTION compatibility)
+
+class ExternalRecommenderModel(BaseModel):
+    """
+    Base model for external recommender API
+    """
+    model_config = ConfigDict(
+        validate_by_alias=True,
+        validate_by_name=True,
+        serialize_by_alias=True
+    )
+
+class ExternalRecommenderDocument(ExternalRecommenderModel):
+    """
+    Document for external recommender API
+    https://inception-project.github.io/releases/37.1/docs/developer-guide.html#_external_recommender_api_document
+    """
+    document_id: Optional[int] = BaseField(
+        None, alias="documentId", description="Identifier for this document"
+    )
+    user_id: Optional[str] = BaseField(None, alias="userId", description="Identifier for the user")
+    xmi: Optional[str] = BaseField(None, description="CAS as XMI")
+
+class ExternalRecommenderMetadata(ExternalRecommenderModel):
+    """
+    Metadata for external recommender API
+    https://inception-project.github.io/releases/37.1/docs/developer-guide.html#_external_recommender_api_metadata
+    """
+    layer: str = BaseField(..., description="Layer which should be predicted")
+    feature: str = BaseField(..., description="Feature of the layer which should be predicted")
+    project_id: int = BaseField(..., alias="projectId", description="The id of the project")
+    anchoring_mode: str = BaseField(
+        ..., alias="anchoringMode", description="How annotations are anchored to tokens"
+    )
+    cross_sentence: bool = BaseField(
+        ..., alias="crossSentence", description="True if cross-sentence annotations are supported"
+    )
+
+class ExternalRecommenderPredictRequest(ExternalRecommenderModel):
+    """
+    Request for external recommender predict endpoint
+    https://inception-project.github.io/releases/37.1/docs/developer-guide.html#_external_recommender_api_predictrequest
+    """
+    document: ExternalRecommenderDocument = BaseField(..., description="Document to predict")
+    request_metadata: ExternalRecommenderMetadata = BaseField(
+        ..., alias="metadata", description="Metadata for prediction"
+    )
+    type_system: str = BaseField(..., alias="typeSystem", description="Type system XML of the CAS")
+
+
+class ExternalRecommenderPredictResponse(ExternalRecommenderModel):
+    """
+    Response from external recommender predict endpoint
+    https://inception-project.github.io/releases/37.1/docs/developer-guide.html#_external_recommender_api_predictresponse
+    """
+    document: str = BaseField(..., description="CAS with annotations as XMI")
 
 
 class ToolDiscoveryInfo(SQLModel):

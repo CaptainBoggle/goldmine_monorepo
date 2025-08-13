@@ -7,12 +7,14 @@ Goldmine is a modular platform for benchmarking Human Phenotype Ontology (HPO) e
 - Runs multiple phenotype extraction tools (each isolated in its own container) on those corpora.
 - Stores predictions & computes sentence‑level multilabel metrics (accuracy, precision, recall, F1, Jaccard).
 - Exposes data + operations via a FastAPI backend and a React frontend.
+- Provides optional INCEpTION External Recommender (CAS/XMI) integration for tools.
 
 ## Stack
 | Component | Tech | Default URL |
 |-----------|------|-------------|
 | Frontend UI | React + Tailwind | http://localhost:3000 |
-| Backend API | FastAPI | http://localhost:8000 |
+| Backend API (HTTP) | FastAPI via Nginx reverse proxy | http://localhost:8000 |
+| Backend API (HTTPS, self-signed) | FastAPI via Nginx | https://localhost:8443 |
 | Database | PostgreSQL | localhost:5432 |
 | Tools (models) | FastAPI microservices | 6001+ |
 
@@ -118,6 +120,40 @@ Clean rebuild (ignore cache):
 docker compose build --no-cache && docker compose up
 ```
 
+## External Recommender (INCEpTION)
+Tools expose an optional endpoint:
+- Tool local: `POST /external-recommender/predict`
+- Via backend proxy: `POST /proxy/{tool_id}/external-recommender/predict`
+Request: CAS XMI + TypeSystem + metadata (layer, feature, anchoring, etc.).
+Response: Updated CAS XMI with predicted annotations where each matched text span is annotated and the target feature populated with an HPO IRI (`http://purl.obolibrary.org/obo/HP_XXXXXXX`). Score fields may be included if defined in the TypeSystem.
+Model loads lazily if not already loaded.
+
+### INCEpTION Configuration Steps
+In INCEpTION, create a Remote Classifier recommender that points to the backend proxy:
+1. Open: Administration -> Projects (left sidebar) -> select your project.
+2. Go to the Recommenders tab and click Create.
+3. Fill the form:
+   - Name: (any descriptive name)
+   - Layer: `Phenotypes`
+   - Feature: `HPO-Term`
+   - Tool: `Remote Classifier`
+4. Remote URL: `https://localhost:8443/proxy/{TOOL-NAME}/external-recommender` (replace `{TOOL-NAME}` with the tool directory name used by the backend, ensure both backend and that tool container are running). Ensure you are using the HTTPS endpoint!
+5. Disable/untick certificate verification (self‑signed cert).
+6. Training capability: set to "Training not supported" (the service only performs prediction; no training endpoint is exposed).
+7. Save. Trigger a test by opening a document—annotations should appear after the recommender runs (you might need to press the 🔄 icon ).
+
+Troubleshooting:
+- If you see a TLS / certificate error, confirm certificate verification is disabled for this recommender.
+- 404: Verify the tool name matches one reported by `/tools` API or backend logs.
+- 422 Unprocessable Entity: Ensure the project layer name (`Phenotypes`) and feature (`HPO-Term`) exactly match those in the TypeSystem sent to the backend.
+- Generally check both INCEpTION logs and goldmine logs for errors.
+
+## HTTPS & Reverse Proxy
+Backend container includes Nginx:
+- Terminates TLS with a self-signed certificate generated at build time in `/app/certs`.
+- Proxies HTTP (8000) and HTTPS (8443) to internal Uvicorn (loopback 127.0.0.1:8001).
+To use custom certs, mount a volume over `/app/certs` containing `cert.pem` and `key.pem` (PEM format) and rebuild or restart.
+
 ## Repository Layout
 ```
 backend/     FastAPI service (ingestion, proxy, metrics)
@@ -158,7 +194,9 @@ uv run ruff check .
 | Symptom | Check |
 |---------|-------|
 | Missing large files | Run `git lfs pull` |
-| Port conflict | Another process using 3000/8000/5432—stop it or edit compose mapping |
+| Port conflict | Another process using 3000/8000/8443/5432—stop it or edit compose mapping |
+| HTTPS warnings | Self-signed cert; accept locally or replace certs |
+| External recommender 422 | Ensure TypeSystem layer/feature names match tool expectations |
 
 ## Updating
 Pull latest + submodules + LFS:
