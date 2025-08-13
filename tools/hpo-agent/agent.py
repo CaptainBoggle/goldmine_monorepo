@@ -567,7 +567,10 @@ TOOLS: List[types.FunctionDeclaration] = [
                     },
                     "top_k": {
                         "type": "INTEGER",
-                        "description": "Optional. The maximum number of candidate terms to return. Defaults to 15.",
+                        "description": (
+                            "Optional. The maximum number of candidate terms to return."
+                            " Defaults to 15."
+                        ),
                     },
                 },
                 "required": ["query"],
@@ -586,21 +589,24 @@ TOOLS: List[types.FunctionDeclaration] = [
                 "properties": {
                     "mappings": {
                         "type": "ARRAY",
-                        "description": "A list of all the phenotype mappings found in the document.",
+                        "description": "A list of all phenotype mappings found in the document.",
                         "items": {
                             "type": "OBJECT",
                             "properties": {
                                 "text_span": {
                                     "type": "STRING",
                                     "description": (
-                                        "The exact text from a sentence that describes the phenotype. For discontinuous "
-                                        "spans, connect the parts with ' -> ' (e.g., 'fingers -> short'). "
-                                        "Must be entirely within a single sentence."
+                                        "The exact text from a sentence that describes a phenotype."
+                                        " For discontinuous spans, connect the parts with ' -> ' "
+                                        "(e.g., 'fingers -> short'). ",
+                                        "Must be entirely within a single sentence.",
                                     ),
                                 },
                                 "hpo_id": {
                                     "type": "STRING",
-                                    "description": "A final, accurate HPO identifier (e.g., 'HP:0001631').",
+                                    "description": (
+                                        "A final, accurate HPO identifier (e.g., 'HP:0001631')."
+                                    ),
                                 },
                             },
                             "required": ["text_span", "hpo_id"],

@@ -133,21 +133,21 @@ def create_app(model_implementation: ModelInterface):
             # Run prediction using the model interface
             tool_input = ToolInput(sentences=[text])
             tool_output = await model_implementation.predict(tool_input)
-
+            model_name = model_implementation.get_info().name
             for match in tool_output.results[0]:
                 match_text = match.match_text or ""
 
                 # Match all occurrences of the match_text
                 for occurrence in re.finditer(re.escape(match_text), text):
                     begin, end = occurrence.start(), occurrence.end()
-
+                    hpo_id = match.id.replace(":", "_")
                     annotation = annotation_type(
                         begin=begin,
                         end=end,
                         **{
-                            feature_name: f"http://purl.obolibrary.org/obo/{match.id.replace(':', '_')}",
+                            feature_name: f"http://purl.obolibrary.org/obo/{hpo_id}",
                             f"{feature_name}_score": 1.0,  # Assuming a score of 1.0 for simplicity
-                            f"{feature_name}_score_explanation": f"Predicted by tool {model_implementation.get_info().name}",
+                            f"{feature_name}_score_explanation": f"Predicted by tool {model_name}",
                             "inception_internal_predicted": True,
                         },
                     )
