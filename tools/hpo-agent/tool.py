@@ -17,6 +17,7 @@ from google.genai import types
 from goldmine.toolkit.interface import ModelInterface
 from goldmine.types import PhenotypeMatch, ToolInfo, ToolInput, ToolOutput
 
+
 def normalize_text_for_matching(text: str) -> str:
     """
     Normalize text for span matching by removing whitespace characters like \r, \n, \t
@@ -24,27 +25,27 @@ def normalize_text_for_matching(text: str) -> str:
     """
     if not text:
         return ""
-    
+
     # Convert to lowercase
     text = text.lower()
-    
+
     # Remove all whitespace characters (spaces, tabs, newlines, carriage returns, etc.)
     # and replace with single spaces, then strip leading/trailing whitespace
-    text = re.sub(r'\s+', ' ', text).strip()
-    
+    text = re.sub(r"\s+", " ", text).strip()
+
     return text
+
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler()],
 )
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
 
 class HPOAgentModelImplementation(ModelInterface):
     def __init__(self):
@@ -90,7 +91,7 @@ class HPOAgentModelImplementation(ModelInterface):
         test_sentences = [
             "The patient has a short stature and developmental delay.",
             "The patient exhibits signs of autism spectrum disorder.",
-            "There is a family history of hypertension and diabetes."
+            "There is a family history of hypertension and diabetes.",
         ]
 
         embedded_sentences = self.embedding_model.embed_queries(test_sentences)
@@ -98,7 +99,6 @@ class HPOAgentModelImplementation(ModelInterface):
         for sentence, embedding in zip(test_sentences, embedded_sentences):
             logger.info(f"Embedded sentence: {sentence}")
             logger.info(f"Embedding: {embedding}")
-        
 
         self.gemini_config = types.GenerateContentConfig(
             temperature=0.5,
@@ -109,10 +109,7 @@ class HPOAgentModelImplementation(ModelInterface):
                 )
             ),
             system_instruction=SYSTEM_PROMPT,
-            thinking_config= types.ThinkingConfig(
-                include_thoughts= True,
-                thinking_budget=-1
-            )
+            thinking_config=types.ThinkingConfig(include_thoughts=True, thinking_budget=-1),
         )
 
         logger.info("HPO agent models loaded successfully")
@@ -150,10 +147,7 @@ class HPOAgentModelImplementation(ModelInterface):
 
         # Start the conversation with proper Gemini contents structure
         contents: List[types.ContentUnion] = [
-            types.Content(
-                role="user",
-                parts=[types.Part.from_text(text=document_text)]
-            )
+            types.Content(role="user", parts=[types.Part.from_text(text=document_text)])
         ]
 
         logger.info("Initial document sent to agent:")
@@ -174,27 +168,31 @@ class HPOAgentModelImplementation(ModelInterface):
 
                 logger.info("Calling Gemini model...")
                 response = self.gemini_client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=contents,
-                    config=self.gemini_config
+                    model="gemini-2.5-flash", contents=contents, config=self.gemini_config
                 )
 
                 logger.info("Gemini response received.")
 
                 # Check if there are function calls to execute
-                if (response and response.candidates and
-                    response.candidates[0] and response.candidates[0].content and
-                    response.candidates[0].content.parts):
+                if (
+                    response
+                    and response.candidates
+                    and response.candidates[0]
+                    and response.candidates[0].content
+                    and response.candidates[0].content.parts
+                ):
                     function_calls = []
                     for part in response.candidates[0].content.parts:
-                        if hasattr(part, 'function_call') and part.function_call:
+                        if hasattr(part, "function_call") and part.function_call:
                             logger.info(f"Function call detected: {part.function_call.name}")
                             # Only log the function name and args summary, not full details
                             if part.function_call.args:
                                 args_dict = dict(part.function_call.args)
                                 # Log queries and mappings in detail for debugging
-                                search_functions = ["batch_search_hpo_candidates",
-                                                  "search_hpo_candidates"]
+                                search_functions = [
+                                    "batch_search_hpo_candidates",
+                                    "search_hpo_candidates",
+                                ]
                                 if part.function_call.name in search_functions:
                                     if "queries" in args_dict:
                                         logger.info(f"Search queries: {args_dict['queries']}")
@@ -205,10 +203,11 @@ class HPOAgentModelImplementation(ModelInterface):
                                     logger.info(f"Submitting {len(mappings)} annotations")
                                     # Log first 5 for brevity
                                     for i, mapping in enumerate(mappings[:5]):
-                                        logger.info(f"  {i+1}. {mapping}")
+                                        logger.info(f"  {i + 1}. {mapping}")
                                     if len(mappings) > 5:
-                                        logger.info(f"  ... and {len(mappings) - 5} "
-                                                  f"more annotations")
+                                        logger.info(
+                                            f"  ... and {len(mappings) - 5} more annotations"
+                                        )
                                 else:
                                     # For other functions, show summary
                                     args_summary = {
@@ -230,13 +229,14 @@ class HPOAgentModelImplementation(ModelInterface):
                         for func_call in function_calls:
                             logger.info(f"Executing function: {func_call.name}")
                             func_response = await self._execute_function_call(func_call, sentences)
-                            
+
                             # Log only summary of function response, not full details
                             result = func_response.get("result", {})
                             if func_call.name == "batch_search_hpo_candidates":
                                 batch_candidates = result.get("batch_candidates", [])
-                                logger.info(f"Function returned {len(batch_candidates)} "
-                                          f"query results")
+                                logger.info(
+                                    f"Function returned {len(batch_candidates)} query results"
+                                )
                             elif func_call.name == "search_hpo_candidates":
                                 candidates = result.get("candidates", [])
                                 logger.info(f"Function returned {len(candidates)} candidates")
@@ -244,17 +244,20 @@ class HPOAgentModelImplementation(ModelInterface):
                                 total_submitted = result.get("total_submitted", "0")
                                 total_validated = result.get("total_validated", "0")
                                 errors = result.get("errors", "[]")
-                                logger.info(f"Submitted {total_submitted} annotations, "
-                                          f"{total_validated} validated")
+                                logger.info(
+                                    f"Submitted {total_submitted} annotations, "
+                                    f"{total_validated} validated"
+                                )
                                 # Always log errors in detail for debugging
                                 if errors != "[]":
                                     logger.error(f"Validation errors: {errors}")
                                     # Parse and log each error separately for clarity
                                     try:
                                         import ast
+
                                         error_list = ast.literal_eval(errors)
                                         for i, error in enumerate(error_list):
-                                            logger.error(f"  Error {i+1}: {error}")
+                                            logger.error(f"  Error {i + 1}: {error}")
                                     except Exception:
                                         # If parsing fails, just log the raw errors
                                         pass
@@ -272,18 +275,20 @@ class HPOAgentModelImplementation(ModelInterface):
 
                             # Create function response part
                             function_response_part = types.Part.from_function_response(
-                                name=func_call.name,
-                                response=func_response.get("result", {})
+                                name=func_call.name, response=func_response.get("result", {})
                             )
                             function_response_parts.append(function_response_part)
 
                         # Add function responses to contents
-                        logger.info(f"Added {len(function_response_parts)} function responses "
-                                  f"to conversation")
+                        logger.info(
+                            f"Added {len(function_response_parts)} function responses "
+                            f"to conversation"
+                        )
                         contents.append(types.Content(role="user", parts=function_response_parts))
                         self._conversation_length_tracker += 1
-                        logger.info(f"Conversation now has {self._conversation_length_tracker} "
-                                  f"turns")
+                        logger.info(
+                            f"Conversation now has {self._conversation_length_tracker} turns"
+                        )
 
                         # Continue the conversation
                         continue
@@ -319,22 +324,19 @@ class HPOAgentModelImplementation(ModelInterface):
                 # Use the submit_annotations function for validation
                 # We pass the sentences list that we have in scope
                 from agent import submit_annotations
+
                 validation_result = submit_annotations(mappings, sentences)
-                
+
                 # Check if there are errors - if so, don't mark as final
                 errors = validation_result.get("errors", "")
                 if errors and errors != "[]":  # If there are actual errors
                     return {
                         "function": function_name,
                         "result": validation_result,
-                        "final": False  # Allow correction
+                        "final": False,  # Allow correction
                     }
                 else:
-                    return {
-                        "function": function_name,
-                        "result": validation_result,
-                        "final": True
-                    }
+                    return {"function": function_name, "result": validation_result, "final": True}
 
             else:
                 logger.warning(f"Unknown function: {function_name}")
@@ -359,10 +361,7 @@ class HPOAgentModelImplementation(ModelInterface):
 
             # Validate text span exists in sentence
             if self._validate_text_span(text_span, sentence):
-                validated_mappings.append({
-                    "text_span": text_span,
-                    "hpo_id": hpo_id
-                })
+                validated_mappings.append({"text_span": text_span, "hpo_id": hpo_id})
             else:
                 logger.warning(f"Text span '{text_span}' not found in sentence")
 
@@ -389,19 +388,16 @@ class HPOAgentModelImplementation(ModelInterface):
         """Convert validated annotations to sentence-organized PhenotypeMatch objects."""
         # Initialize result with empty lists for each sentence
         sentence_matches = [[] for _ in sentences]
-        
+
         for annotation in validated_annotations:
             text_span = annotation.get("text_span", "")
             hpo_id = annotation.get("hpo_id", "")
             sentence_index = annotation.get("sentence_index", 0)
-            
+
             if text_span and hpo_id and 0 <= sentence_index < len(sentences):
-                match = PhenotypeMatch(
-                    id=hpo_id,
-                    match_text=text_span
-                )
+                match = PhenotypeMatch(id=hpo_id, match_text=text_span)
                 sentence_matches[sentence_index].append(match)
-        
+
         return sentence_matches
 
     def _convert_to_phenotype_matches(
@@ -413,10 +409,7 @@ class HPOAgentModelImplementation(ModelInterface):
             text_span = annotation.get("text_span", "")
             hpo_id = annotation.get("hpo_id", "")
             if text_span and hpo_id:
-                matches.append(PhenotypeMatch(
-                    id=hpo_id,
-                    match_text=text_span
-                ))
+                matches.append(PhenotypeMatch(id=hpo_id, match_text=text_span))
         return matches
 
     def _get_model_info(self) -> ToolInfo:

@@ -9,6 +9,7 @@ from ..services.tool_service import ToolService
 
 router = APIRouter()
 
+
 def get_tool_dependency(
     tool_name: str,
     tool_service: ToolService = Depends(get_tool_service),

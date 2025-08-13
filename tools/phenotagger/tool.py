@@ -1,13 +1,12 @@
-import asyncio
 import logging
+
+import tensorflow as tf
+from dic_ner import dic_ont
+from nn_model import bioTag_BERT, bioTag_CNN
+from tagging_text import bioTag
 
 from goldmine.toolkit.interface import ModelInterface
 from goldmine.types import PhenotypeMatch, ToolInfo, ToolInput, ToolOutput
-
-from nn_model import bioTag_CNN, bioTag_BERT
-from tagging_text import bioTag
-from dic_ner import dic_ont
-import tensorflow as tf
 
 logger = logging.getLogger(__name__)
 
@@ -16,9 +15,11 @@ class PhenoTaggerModelImplementation(ModelInterface):
     def __init__(self):
         super().__init__()
         self.model = None
-        ontfiles={'dic_file':'externals/PhenoTagger/dict/noabb_lemma.dic',
-              'word_hpo_file':'externals/PhenoTagger/dict/word_id_map.json',
-              'hpo_word_file':'externals/PhenoTagger/dict/id_word_map.json'}
+        ontfiles = {
+            "dic_file": "externals/PhenoTagger/dict/noabb_lemma.dic",
+            "word_hpo_file": "externals/PhenoTagger/dict/word_id_map.json",
+            "hpo_word_file": "externals/PhenoTagger/dict/id_word_map.json",
+        }
         self.biotag_dic = dic_ont(ontfiles)
 
     async def _load_model(self):
@@ -26,29 +27,37 @@ class PhenoTaggerModelImplementation(ModelInterface):
 
         # TODO: Properly model_type functionality
         model_type = "biobert"
-        if model_type =='cnn':
-            vocabfiles={'w2vfile':'externals/PhenoTagger_weights/bio_embedding_intrinsic.d200',   
-                        'charfile':'externals/PhenoTagger/dict/char.vocab',
-                        'labelfile':'externals/PhenoTagger/dict/lable.vocab',
-                        'posfile':'externals/PhenoTagger/dict/pos.vocab'}
-            modelfile='externals/PhenoTagger_weights/cnn_PT_v1.2.h5'
-        elif model_type == 'bioformer':
-            vocabfiles={'labelfile':'externals/PhenoTagger/dict/lable.vocab',
-                        'checkpoint_path':'externals/bioformer-cased-v1.0/',
-                        'lowercase':False}
-            modelfile='externals/PhenoTagger_weights/bioformer_PT_v1.2.h5'
-        elif model_type == 'pubmedbert':
-            vocabfiles={'labelfile':'externals/PhenoTagger/dict/lable.vocab',
-                        'checkpoint_path':'externals/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext/',
-                        'lowercase':True}
-            modelfile='externals/PhenoTagger_weights/pubmedbert_PT_v1.2.h5'
+        if model_type == "cnn":
+            vocabfiles = {
+                "w2vfile": "externals/PhenoTagger_weights/bio_embedding_intrinsic.d200",
+                "charfile": "externals/PhenoTagger/dict/char.vocab",
+                "labelfile": "externals/PhenoTagger/dict/lable.vocab",
+                "posfile": "externals/PhenoTagger/dict/pos.vocab",
+            }
+            modelfile = "externals/PhenoTagger_weights/cnn_PT_v1.2.h5"
+        elif model_type == "bioformer":
+            vocabfiles = {
+                "labelfile": "externals/PhenoTagger/dict/lable.vocab",
+                "checkpoint_path": "externals/bioformer-cased-v1.0/",
+                "lowercase": False,
+            }
+            modelfile = "externals/PhenoTagger_weights/bioformer_PT_v1.2.h5"
+        elif model_type == "pubmedbert":
+            vocabfiles = {
+                "labelfile": "externals/PhenoTagger/dict/lable.vocab",
+                "checkpoint_path": "externals/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext/",
+                "lowercase": True,
+            }
+            modelfile = "externals/PhenoTagger_weights/pubmedbert_PT_v1.2.h5"
         else:
-            vocabfiles={'labelfile':'externals/PhenoTagger/dict/lable.vocab',
-                        'checkpoint_path':'externals/biobert-base-cased-v1.2/',
-                        'lowercase':False}
-            modelfile='externals/PhenoTagger_weights/biobert_PT_v1.2.h5'  
+            vocabfiles = {
+                "labelfile": "externals/PhenoTagger/dict/lable.vocab",
+                "checkpoint_path": "externals/biobert-base-cased-v1.2/",
+                "lowercase": False,
+            }
+            modelfile = "externals/PhenoTagger_weights/biobert_PT_v1.2.h5"
 
-        if model_type == 'cnn':
+        if model_type == "cnn":
             self.model = bioTag_CNN(vocabfiles)
         else:
             self.model = bioTag_BERT(vocabfiles)
@@ -58,7 +67,7 @@ class PhenoTaggerModelImplementation(ModelInterface):
 
     async def _unload_model(self):
         logger.info("Unloading PhenoTagger model...")
-        
+
         del self.model
         tf.keras.backend.clear_session()
 
@@ -75,8 +84,7 @@ class PhenoTaggerModelImplementation(ModelInterface):
 
             for an in annotations:
                 match = PhenotypeMatch(
-                    id=an[2],
-                    match_text=sentence.lower()[int(an[0]):int(an[1])]
+                    id=an[2], match_text=sentence.lower()[int(an[0]) : int(an[1])]
                 )
                 sentence_matches.append(match)
             results.append(sentence_matches)

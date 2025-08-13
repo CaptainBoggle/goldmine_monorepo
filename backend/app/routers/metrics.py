@@ -1,16 +1,16 @@
 from typing import List
+
 import evaluate
 import numpy as np
 from fastapi import APIRouter, Depends, HTTPException
+from sklearn.metrics import jaccard_score
 from sklearn.preprocessing import MultiLabelBinarizer
 from sqlmodel import Session, select
-from sklearn.metrics import jaccard_score
 
 from goldmine.types import (
     Corpus,
     EvaluationResult,
     Metric,
-    Prediction,
     ToolDiscoveryInfo,
 )
 
@@ -19,6 +19,7 @@ from .corpora import get_corpus_dependency
 from .predictions import get_predictions_for_corpus, get_tool_dependency
 
 router = APIRouter()
+
 
 def calculate_evaluation_metrics(
     predictions: List[List[str]], ground_truth_labels: List[List[str]]
@@ -48,16 +49,10 @@ def calculate_evaluation_metrics(
     recall = recall_metric.compute(
         predictions=binarized_predictions, references=binarized_ground_truth, average="micro"
     )["recall"]
-    jaccard = float(
-        jaccard_score(binarized_ground_truth, binarized_predictions, average="micro")
-    )
+    jaccard = float(jaccard_score(binarized_ground_truth, binarized_predictions, average="micro"))
 
     return EvaluationResult(
-        accuracy=accuracy,
-        f1=f1,
-        precision=precision,
-        recall=recall,
-        jaccard=jaccard
+        accuracy=accuracy, f1=f1, precision=precision, recall=recall, jaccard=jaccard
     )
 
 

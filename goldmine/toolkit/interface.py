@@ -3,13 +3,13 @@ from abc import ABC, abstractmethod
 
 from goldmine.types import (
     LoadResponse,
+    ToolBatchInput,
+    ToolBatchOutput,
+    ToolBatchResponse,
     ToolInfo,
     ToolInput,
     ToolOutput,
     ToolResponse,
-    ToolBatchInput,
-    ToolBatchOutput,
-    ToolBatchResponse,
     ToolState,
     ToolStatus,
     UnloadResponse,
@@ -49,7 +49,7 @@ class ModelInterface(ABC):
         Should return a list of lists of PhenotypeMatch objects (one list per sentence).
         """
         pass
-    
+
     async def _batch_predict(self, input: ToolBatchInput) -> ToolBatchOutput:
         """
         Run prediction on a list of documents. A document is a list of sentences.
@@ -137,7 +137,6 @@ class ModelInterface(ABC):
             self.error_message = str(e)
             raise
 
-    
     async def batch_predict(self, input_data: ToolBatchInput) -> ToolBatchResponse:
         """
         Public method to run prediction, used by the API layer.
@@ -157,7 +156,6 @@ class ModelInterface(ABC):
             self.state = ToolState.ERROR
             self.error_message = str(e)
             raise
-
 
     def get_status(self) -> ToolStatus:
         """
