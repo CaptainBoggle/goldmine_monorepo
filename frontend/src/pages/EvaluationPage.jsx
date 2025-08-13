@@ -203,7 +203,7 @@ function BarChart({ selectedCorpora, selectedMetrics, metricsData, tools }) {
 }
 
 function EvaluationPage() {
-  const { tools, corpora, metricsData, isLoading, error, clearError, refreshData, lastFetchTime, hasInitialData, lastUpdatedCorpus } = useEvaluationAPI();
+  const { tools, corpora, metricsData, isLoading, error, clearError, fetchAllMetrics, lastFetchTime, hasInitialData, lastUpdatedCorpus } = useEvaluationAPI();
   const [selectedCorpus, setSelectedCorpus] = useState('');
   const [selectedCorpusVersion, setSelectedCorpusVersion] = useState('');
   const [selectedMetrics, setSelectedMetrics] = useState(['accuracy']);
@@ -258,14 +258,11 @@ function EvaluationPage() {
   };
 
   const handleRefresh = () => {
-    if (selectedCorpus && selectedCorpusVersion) {
-      refreshData(selectedCorpus, selectedCorpusVersion);
-    }
-    // No fallback - only refresh if something is selected
+    fetchAllMetrics();
   };
 
   // Check if refresh button should be disabled
-  const isRefreshDisabled = !selectedCorpus || !selectedCorpusVersion || isLoading;
+  const isRefreshDisabled = isLoading;
 
   // Get data for the selected corpus and version
   const getCorpusData = (corpusKey, versionKey) => {
@@ -313,7 +310,7 @@ function EvaluationPage() {
       <div className="evaluation-section-list">
         <div className="evaluation-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h2 className="evaluation-section-title" style={{ marginBottom: 0 }}>Select Corpus and Version</h2>
+            <h2 className="evaluation-section-title" style={{ marginBottom: 0 }}>Select Corpus and Refresh Data</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               {lastUpdatedCorpus && (
                 <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>

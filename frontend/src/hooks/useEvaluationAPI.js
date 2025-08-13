@@ -465,5 +465,10 @@ export function useEvaluationPreload() {
 
 // Hook for EvaluationPage that uses preloaded data
 export function useEvaluationAPI() {
-  return useEvaluationContext();
+  const context = useEvaluationContext();
+  // Also expose fetchAllMetrics from the preload hook for manual fetching
+  return {
+    ...context,
+    fetchAllMetrics: context.fetchAllMetrics
+  };
 }

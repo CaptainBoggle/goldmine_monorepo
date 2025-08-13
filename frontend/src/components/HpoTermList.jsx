@@ -48,7 +48,7 @@ function HpoTermList({ matches }) {
         const expanded = openIdx === idx;
         return (
           <div
-            key={m.id}
+            key={`${m.id}-${idx}`}
             style={{
               background: '#fff',
               border: '1.5px solid #ccc',

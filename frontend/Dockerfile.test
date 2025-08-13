@@ -1,0 +1,16 @@
+# Test stage with Node.js for running tests
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Default command for testing
+CMD ["npm", "run", "test:pages"] 
