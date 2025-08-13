@@ -10,11 +10,12 @@ from verifiers.utils.data_utils import extract_boxed_answer
 
 
 def extract_hpo_ids(annotation):
-    term_url = annotation.infons.get('HPOterm', '')
-    return term_url.strip().split('/')[-1]
+    term_url = annotation.infons.get("HPOterm", "")
+    return term_url.strip().split("/")[-1]
+
 
 def parse_bioc_file(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         collection = bioc.load(f)
 
     rows = []
@@ -26,18 +27,20 @@ def parse_bioc_file(file_path):
                 rows.append((text, str(hpo_ids)))
     return rows
 
+
 def pad_prompt(example, prefix, suffix):
     example["question"] = prefix + example["question"] + suffix
     return example
 
+
 def load_hpo_dataset(dataset_path: str = "externals/phenotypeCR_eval/Annotations_BioC"):
     all_rows = []
-    pattern = os.path.join(dataset_path, '*', 'lwit.xml')
+    pattern = os.path.join(dataset_path, "*", "lwit.xml")
     for file_path in glob.glob(pattern):
         rows = parse_bioc_file(file_path)
         all_rows.extend(rows)
 
-    df = pd.DataFrame(all_rows, columns=['question', 'answer'])
+    df = pd.DataFrame(all_rows, columns=["question", "answer"])
 
     dataset = Dataset.from_pandas(df)
     prefix = (
@@ -47,17 +50,12 @@ def load_hpo_dataset(dataset_path: str = "externals/phenotypeCR_eval/Annotations
         "Your final answer should be in the format ['HP_XXXXXXX', 'HP_XXXXXXX', ...] "
         "such that it can be parsed by ast.literal_eval.\n\n"
     )
-    dataset = dataset.map(
-        pad_prompt,
-        fn_kwargs={"prefix": prefix, "suffix": ""}
-    )
+    dataset = dataset.map(pad_prompt, fn_kwargs={"prefix": prefix, "suffix": ""})
 
-    ds_splits: DatasetDict = dataset.train_test_split(
-        test_size=0.15,
-        seed=42
-    )
+    ds_splits: DatasetDict = dataset.train_test_split(test_size=0.15, seed=42)
 
     return ds_splits["train"]
+
 
 def get_hpo_environment():
     system_prompt = """
@@ -90,8 +88,5 @@ def get_hpo_environment():
     dataset = load_hpo_dataset().select(range(1000))
 
     return vf.SingleTurnEnv(
-        dataset=dataset,
-        system_prompt=system_prompt,
-        parser=parser,
-        rubric=rubric
+        dataset=dataset, system_prompt=system_prompt, parser=parser, rubric=rubric
     )

@@ -9,6 +9,7 @@ from goldmine.types import PhenotypeMatch, ToolInfo, ToolInput, ToolOutput
 
 logger = logging.getLogger(__name__)
 
+
 def normalize_unicode_to_ascii(text: str) -> str:
     """
     Normalize Unicode text by converting problematic characters to standard ASCII equivalents.
@@ -17,56 +18,53 @@ def normalize_unicode_to_ascii(text: str) -> str:
         return text
 
     # First, normalize to NFC form (canonical decomposition + composition)
-    text = unicodedata.normalize('NFC', text)
+    text = unicodedata.normalize("NFC", text)
 
     # char mappings stolen from https://github.com/sureshfizzy/CineSync/blob/72ab2317b9fad6c2ec39084e84c5c60d9975c928/MediaHub/utils/file_utils.py
     char_mappings = {
         # Various space characters -> regular space
-        '\u00A0': ' ',  # NO-BREAK SPACE
-        '\u2002': ' ',  # EN SPACE
-        '\u2003': ' ',  # EM SPACE
-        '\u2004': ' ',  # THREE-PER-EM SPACE
-        '\u2005': ' ',  # FOUR-PER-EM SPACE
-        '\u2006': ' ',  # SIX-PER-EM SPACE
-        '\u2007': ' ',  # FIGURE SPACE
-        '\u2008': ' ',  # PUNCTUATION SPACE
-        '\u2009': ' ',  # THIN SPACE
-        '\u200A': ' ',  # HAIR SPACE
-        '\u202F': ' ',  # NARROW NO-BREAK SPACE
-        '\u205F': ' ',  # MEDIUM MATHEMATICAL SPACE
-        '\u3000': ' ',  # IDEOGRAPHIC SPACE
-
+        "\u00a0": " ",  # NO-BREAK SPACE
+        "\u2002": " ",  # EN SPACE
+        "\u2003": " ",  # EM SPACE
+        "\u2004": " ",  # THREE-PER-EM SPACE
+        "\u2005": " ",  # FOUR-PER-EM SPACE
+        "\u2006": " ",  # SIX-PER-EM SPACE
+        "\u2007": " ",  # FIGURE SPACE
+        "\u2008": " ",  # PUNCTUATION SPACE
+        "\u2009": " ",  # THIN SPACE
+        "\u200a": " ",  # HAIR SPACE
+        "\u202f": " ",  # NARROW NO-BREAK SPACE
+        "\u205f": " ",  # MEDIUM MATHEMATICAL SPACE
+        "\u3000": " ",  # IDEOGRAPHIC SPACE
         # Various hyphen and dash characters -> regular hyphen-minus
-        '\u2010': '-',  # HYPHEN
-        '\u2011': '-',  # NON-BREAKING HYPHEN
-        '\u2012': '-',  # FIGURE DASH
-        '\u2013': '-',  # EN DASH
-        '\u2014': '-',  # EM DASH
-        '\u2015': '-',  # HORIZONTAL BAR
-        '\u2212': '-',  # MINUS SIGN
-        '\uFF0D': '-',  # FULLWIDTH HYPHEN-MINUS
-
+        "\u2010": "-",  # HYPHEN
+        "\u2011": "-",  # NON-BREAKING HYPHEN
+        "\u2012": "-",  # FIGURE DASH
+        "\u2013": "-",  # EN DASH
+        "\u2014": "-",  # EM DASH
+        "\u2015": "-",  # HORIZONTAL BAR
+        "\u2212": "-",  # MINUS SIGN
+        "\uff0d": "-",  # FULLWIDTH HYPHEN-MINUS
         # Various quote characters -> regular quotes
-        '\u2018': "'",  # LEFT SINGLE QUOTATION MARK
-        '\u2019': "'",  # RIGHT SINGLE QUOTATION MARK
-        '\u201A': "'",  # SINGLE LOW-9 QUOTATION MARK
-        '\u201B': "'",  # SINGLE HIGH-REVERSED-9 QUOTATION MARK
-        '\u201C': '"',  # LEFT DOUBLE QUOTATION MARK
-        '\u201D': '"',  # RIGHT DOUBLE QUOTATION MARK
-        '\u201E': '"',  # DOUBLE LOW-9 QUOTATION MARK
-        '\u201F': '"',  # DOUBLE HIGH-REVERSED-9 QUOTATION MARK
-        '\u2039': '<',  # SINGLE LEFT-POINTING ANGLE QUOTATION MARK
-        '\u203A': '>',  # SINGLE RIGHT-POINTING ANGLE QUOTATION MARK
-        '\u00AB': '"',  # LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
-        '\u00BB': '"',  # RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
-
+        "\u2018": "'",  # LEFT SINGLE QUOTATION MARK
+        "\u2019": "'",  # RIGHT SINGLE QUOTATION MARK
+        "\u201a": "'",  # SINGLE LOW-9 QUOTATION MARK
+        "\u201b": "'",  # SINGLE HIGH-REVERSED-9 QUOTATION MARK
+        "\u201c": '"',  # LEFT DOUBLE QUOTATION MARK
+        "\u201d": '"',  # RIGHT DOUBLE QUOTATION MARK
+        "\u201e": '"',  # DOUBLE LOW-9 QUOTATION MARK
+        "\u201f": '"',  # DOUBLE HIGH-REVERSED-9 QUOTATION MARK
+        "\u2039": "<",  # SINGLE LEFT-POINTING ANGLE QUOTATION MARK
+        "\u203a": ">",  # SINGLE RIGHT-POINTING ANGLE QUOTATION MARK
+        "\u00ab": '"',  # LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
+        "\u00bb": '"',  # RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
         # Other common problematic characters
-        '\u2026': '...',  # HORIZONTAL ELLIPSIS
-        '\u2022': '*',    # BULLET
-        '\u2023': '*',    # TRIANGULAR BULLET
-        '\u2043': '*',    # HYPHEN BULLET
-        '\u00B7': '*',    # MIDDLE DOT
-        '\u2219': '*',    # BULLET OPERATOR
+        "\u2026": "...",  # HORIZONTAL ELLIPSIS
+        "\u2022": "*",  # BULLET
+        "\u2023": "*",  # TRIANGULAR BULLET
+        "\u2043": "*",  # HYPHEN BULLET
+        "\u00b7": "*",  # MIDDLE DOT
+        "\u2219": "*",  # BULLET OPERATOR
     }
 
     for unicode_char, replacement in char_mappings.items():
@@ -75,7 +73,7 @@ def normalize_unicode_to_ascii(text: str) -> str:
     result = []
     for char in text:
         if ord(char) > 127:
-            decomposed = unicodedata.normalize('NFD', char)
+            decomposed = unicodedata.normalize("NFD", char)
             if len(decomposed) > 1 and ord(decomposed[0]) <= 127:
                 result.append(decomposed[0])
             else:
@@ -83,7 +81,7 @@ def normalize_unicode_to_ascii(text: str) -> str:
         else:
             result.append(char)
 
-    return ''.join(result)
+    return "".join(result)
 
 
 class FastHPOCRImplementation(ModelInterface):
@@ -146,8 +144,7 @@ class FastHPOCRImplementation(ModelInterface):
             sentence_matches = []
             for annotation in res:
                 match = PhenotypeMatch(
-                    id=annotation.getHPOUri(),
-                    match_text=annotation.getTextSpan()
+                    id=annotation.getHPOUri(), match_text=annotation.getTextSpan()
                 )
                 sentence_matches.append(match)
             results.append(sentence_matches)

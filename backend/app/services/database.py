@@ -26,7 +26,7 @@ class DatabaseService:
             max_overflow=20,  # Additional connections that can be created
             pool_timeout=30,  # Timeout for getting a connection from pool
             pool_recycle=3600,  # Recycle connections after 1 hour
-            pool_pre_ping=True  # Verify connections before use
+            pool_pre_ping=True,  # Verify connections before use
         )
         self.corpora_root = corpora_root
 

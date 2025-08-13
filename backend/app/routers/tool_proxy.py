@@ -3,7 +3,17 @@ from typing import Any, Dict
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
 
-from goldmine.types import LoadResponse, ToolInfo, ToolInput, ToolResponse, ToolBatchInput, ToolBatchResponse, ToolStatus, ExternalRecommenderPredictRequest, ExternalRecommenderPredictResponse
+from goldmine.types import (
+    ExternalRecommenderPredictRequest,
+    ExternalRecommenderPredictResponse,
+    LoadResponse,
+    ToolBatchInput,
+    ToolBatchResponse,
+    ToolInfo,
+    ToolInput,
+    ToolResponse,
+    ToolStatus,
+)
 
 from ..dependencies import get_tool_service
 from ..services.tool_service import ToolService
@@ -64,7 +74,6 @@ async def predict_with_tool(
     return await _proxy_post_request(tool.endpoint, "/predict", input_data.dict(), timeout=600.0)
 
 
-
 @router.post("/{tool_id}/batch_predict", response_model=ToolBatchResponse)
 async def batch_predict_with_tool(
     tool_id: str, input_data: ToolBatchInput, tool_service: ToolService = Depends(get_tool_service)
@@ -81,11 +90,12 @@ async def batch_predict_with_tool(
         timeout=600.0,
     )  # 10 minutes
 
+
 @router.post("/{tool_id}/external-recommender/predict")
 async def predict_with_external_recommender(
     tool_id: str,
     request: ExternalRecommenderPredictRequest,
-    tool_service: ToolService = Depends(get_tool_service)
+    tool_service: ToolService = Depends(get_tool_service),
 ) -> ExternalRecommenderPredictResponse:
     """Make a prediction using INCEpTION external recommender API format"""
     tool = tool_service.get_tool_by_name(tool_id)

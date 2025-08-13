@@ -47,10 +47,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
     return JSONResponse(
         status_code=500,
-        content={
-            "detail": f"Internal server error: {str(exc)}",
-            "type": type(exc).__name__
-        }
+        content={"detail": f"Internal server error: {str(exc)}", "type": type(exc).__name__},
     )
 
 
@@ -58,11 +55,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """Handle validation errors and return JSON responses."""
     return JSONResponse(
-        status_code=422,
-        content={
-            "detail": "Validation error",
-            "errors": exc.errors()
-        }
+        status_code=422, content={"detail": "Validation error", "errors": exc.errors()}
     )
 
 

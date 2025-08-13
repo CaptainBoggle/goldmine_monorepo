@@ -17,10 +17,8 @@ from sentence_transformers import SentenceTransformer
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler()],
 )
 
 logger = logging.getLogger(__name__)
@@ -35,8 +33,10 @@ if os.path.exists(QDRANT_PATH + ".lock"):
     os.remove(QDRANT_PATH + ".lock")
 ONTOLOGY = Ontology(data_folder=f"./hpo/{HPO_VERSION}")
 
+
 class EmbeddingModel(ABC):
     """Abstract base class for embedding models."""
+
     def __init__(self):
         self._model = None
 
@@ -84,9 +84,7 @@ class EmbeddingModel(ABC):
 
 class StellaEmbeddingModel(EmbeddingModel):
     def _create_model(self) -> SentenceTransformer:
-        return SentenceTransformer(
-            "NovaSearch/stella_en_1.5B_v5", trust_remote_code=True
-        )
+        return SentenceTransformer("NovaSearch/stella_en_1.5B_v5", trust_remote_code=True)
 
     @property
     def name(self) -> str:
@@ -110,6 +108,7 @@ class StellaEmbeddingModel(EmbeddingModel):
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         model = self._load_model()
         return model.encode(texts).tolist()
+
 
 @dataclass
 class HPOEntry:
@@ -138,15 +137,13 @@ class HPOEntry:
     def get_children(self) -> List[Dict[str, str]]:
         """Returns a list of children, including only their names and ids"""
         return (
-            [{"id": c.id, "name": c.name} for c in self.term.children]
-            if self.term.children else []
+            [{"id": c.id, "name": c.name} for c in self.term.children] if self.term.children else []
         )
 
     def get_parents(self) -> List[Dict[str, str]]:
         """Returns a list of parents, including only their names and ids"""
         return (
-            [{"id": p.id, "name": p.name} for p in self.term.parents]
-            if self.term.parents else []
+            [{"id": p.id, "name": p.name} for p in self.term.parents] if self.term.parents else []
         )
 
     def to_dict(self) -> Dict[str, str | List[str] | int]:
@@ -161,6 +158,7 @@ class HPOEntry:
             # "num_children": self.num_children,
         }
 
+
 def normalize_text(text: str) -> str:
     """
     Normalize text by removing case and all non-alphanumeric characters.
@@ -172,9 +170,10 @@ def normalize_text(text: str) -> str:
     text = text.lower()
 
     # Remove all non-alphanumeric characters
-    text = re.sub(r'[^a-z0-9\s]', '', text)
+    text = re.sub(r"[^a-z0-9\s]", "", text)
 
     return text
+
 
 def normalize_text_for_matching(text: str) -> str:
     """
@@ -192,9 +191,10 @@ def normalize_text_for_matching(text: str) -> str:
 
     # Remove all whitespace characters (spaces, tabs, newlines, carriage returns, etc.)
     # and replace with single spaces, then strip leading/trailing whitespace
-    text = re.sub(r'\s+', ' ', text).strip()
+    text = re.sub(r"\s+", " ", text).strip()
 
     return text
+
 
 def normalize_unicode_to_ascii(text: str) -> str:
     """
@@ -204,56 +204,53 @@ def normalize_unicode_to_ascii(text: str) -> str:
         return text
 
     # First, normalize to NFC form (canonical decomposition + composition)
-    text = unicodedata.normalize('NFC', text)
+    text = unicodedata.normalize("NFC", text)
 
     # char mappings stolen from https://github.com/sureshfizzy/CineSync/blob/72ab2317b9fad6c2ec39084e84c5c60d9975c928/MediaHub/utils/file_utils.py
     char_mappings = {
         # Various space characters -> regular space
-        '\u00A0': ' ',  # NO-BREAK SPACE
-        '\u2002': ' ',  # EN SPACE
-        '\u2003': ' ',  # EM SPACE
-        '\u2004': ' ',  # THREE-PER-EM SPACE
-        '\u2005': ' ',  # FOUR-PER-EM SPACE
-        '\u2006': ' ',  # SIX-PER-EM SPACE
-        '\u2007': ' ',  # FIGURE SPACE
-        '\u2008': ' ',  # PUNCTUATION SPACE
-        '\u2009': ' ',  # THIN SPACE
-        '\u200A': ' ',  # HAIR SPACE
-        '\u202F': ' ',  # NARROW NO-BREAK SPACE
-        '\u205F': ' ',  # MEDIUM MATHEMATICAL SPACE
-        '\u3000': ' ',  # IDEOGRAPHIC SPACE
-
+        "\u00a0": " ",  # NO-BREAK SPACE
+        "\u2002": " ",  # EN SPACE
+        "\u2003": " ",  # EM SPACE
+        "\u2004": " ",  # THREE-PER-EM SPACE
+        "\u2005": " ",  # FOUR-PER-EM SPACE
+        "\u2006": " ",  # SIX-PER-EM SPACE
+        "\u2007": " ",  # FIGURE SPACE
+        "\u2008": " ",  # PUNCTUATION SPACE
+        "\u2009": " ",  # THIN SPACE
+        "\u200a": " ",  # HAIR SPACE
+        "\u202f": " ",  # NARROW NO-BREAK SPACE
+        "\u205f": " ",  # MEDIUM MATHEMATICAL SPACE
+        "\u3000": " ",  # IDEOGRAPHIC SPACE
         # Various hyphen and dash characters -> regular hyphen-minus
-        '\u2010': '-',  # HYPHEN
-        '\u2011': '-',  # NON-BREAKING HYPHEN
-        '\u2012': '-',  # FIGURE DASH
-        '\u2013': '-',  # EN DASH
-        '\u2014': '-',  # EM DASH
-        '\u2015': '-',  # HORIZONTAL BAR
-        '\u2212': '-',  # MINUS SIGN
-        '\uFF0D': '-',  # FULLWIDTH HYPHEN-MINUS
-
+        "\u2010": "-",  # HYPHEN
+        "\u2011": "-",  # NON-BREAKING HYPHEN
+        "\u2012": "-",  # FIGURE DASH
+        "\u2013": "-",  # EN DASH
+        "\u2014": "-",  # EM DASH
+        "\u2015": "-",  # HORIZONTAL BAR
+        "\u2212": "-",  # MINUS SIGN
+        "\uff0d": "-",  # FULLWIDTH HYPHEN-MINUS
         # Various quote characters -> regular quotes
-        '\u2018': "'",  # LEFT SINGLE QUOTATION MARK
-        '\u2019': "'",  # RIGHT SINGLE QUOTATION MARK
-        '\u201A': "'",  # SINGLE LOW-9 QUOTATION MARK
-        '\u201B': "'",  # SINGLE HIGH-REVERSED-9 QUOTATION MARK
-        '\u201C': '"',  # LEFT DOUBLE QUOTATION MARK
-        '\u201D': '"',  # RIGHT DOUBLE QUOTATION MARK
-        '\u201E': '"',  # DOUBLE LOW-9 QUOTATION MARK
-        '\u201F': '"',  # DOUBLE HIGH-REVERSED-9 QUOTATION MARK
-        '\u2039': '<',  # SINGLE LEFT-POINTING ANGLE QUOTATION MARK
-        '\u203A': '>',  # SINGLE RIGHT-POINTING ANGLE QUOTATION MARK
-        '\u00AB': '"',  # LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
-        '\u00BB': '"',  # RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
-
+        "\u2018": "'",  # LEFT SINGLE QUOTATION MARK
+        "\u2019": "'",  # RIGHT SINGLE QUOTATION MARK
+        "\u201a": "'",  # SINGLE LOW-9 QUOTATION MARK
+        "\u201b": "'",  # SINGLE HIGH-REVERSED-9 QUOTATION MARK
+        "\u201c": '"',  # LEFT DOUBLE QUOTATION MARK
+        "\u201d": '"',  # RIGHT DOUBLE QUOTATION MARK
+        "\u201e": '"',  # DOUBLE LOW-9 QUOTATION MARK
+        "\u201f": '"',  # DOUBLE HIGH-REVERSED-9 QUOTATION MARK
+        "\u2039": "<",  # SINGLE LEFT-POINTING ANGLE QUOTATION MARK
+        "\u203a": ">",  # SINGLE RIGHT-POINTING ANGLE QUOTATION MARK
+        "\u00ab": '"',  # LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
+        "\u00bb": '"',  # RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
         # Other common problematic characters
-        '\u2026': '...',  # HORIZONTAL ELLIPSIS
-        '\u2022': '*',    # BULLET
-        '\u2023': '*',    # TRIANGULAR BULLET
-        '\u2043': '*',    # HYPHEN BULLET
-        '\u00B7': '*',    # MIDDLE DOT
-        '\u2219': '*',    # BULLET OPERATOR
+        "\u2026": "...",  # HORIZONTAL ELLIPSIS
+        "\u2022": "*",  # BULLET
+        "\u2023": "*",  # TRIANGULAR BULLET
+        "\u2043": "*",  # HYPHEN BULLET
+        "\u00b7": "*",  # MIDDLE DOT
+        "\u2219": "*",  # BULLET OPERATOR
     }
 
     for unicode_char, replacement in char_mappings.items():
@@ -262,7 +259,7 @@ def normalize_unicode_to_ascii(text: str) -> str:
     result = []
     for char in text:
         if ord(char) > 127:
-            decomposed = unicodedata.normalize('NFD', char)
+            decomposed = unicodedata.normalize("NFD", char)
             if len(decomposed) > 1 and ord(decomposed[0]) <= 127:
                 result.append(decomposed[0])
             else:
@@ -270,7 +267,8 @@ def normalize_unicode_to_ascii(text: str) -> str:
         else:
             result.append(char)
 
-    return ''.join(result)
+    return "".join(result)
+
 
 def build_index_exact_matches() -> Dict[str, Set[str]]:
     """
@@ -287,7 +285,9 @@ def build_index_exact_matches() -> Dict[str, Set[str]]:
                     index[normalize_text(synonym)].add(term.id)
     return index
 
+
 EXACT_MATCH_INDEX = build_index_exact_matches()
+
 
 def find_exact_matches(query: str) -> Optional[Set[str]]:
     """
@@ -302,21 +302,17 @@ def find_exact_matches(query: str) -> Optional[Set[str]]:
 
     return None
 
-def query_vector_db(embeddings: List[List[float]], model_name: str,
-                     top_k: int = 20) -> List[List[Tuple[str, float]]]:
+
+def query_vector_db(
+    embeddings: List[List[float]], model_name: str, top_k: int = 20
+) -> List[List[Tuple[str, float]]]:
     requests = [
-        QueryRequest(
-            query=embedding,
-            limit=top_k,
-            with_payload=True,
-            using=model_name
-        )
+        QueryRequest(query=embedding, limit=top_k, with_payload=True, using=model_name)
         for embedding in embeddings
     ]
 
     query_response = QDRANT_CLIENT.query_batch_points(
-        collection_name=COLLECTION_NAME,
-        requests=requests
+        collection_name=COLLECTION_NAME, requests=requests
     )
 
     search_responses = []
@@ -337,9 +333,7 @@ def query_vector_db(embeddings: List[List[float]], model_name: str,
 
 
 def search_terms(
-    queries: List[str],
-    embedding_model: EmbeddingModel,
-    top_k: int = 20
+    queries: List[str], embedding_model: EmbeddingModel, top_k: int = 20
 ) -> List[List[Tuple[str, float]]]:
     """
     Search for terms in the HPO ontology using both text matching and embeddings.
@@ -351,7 +345,7 @@ def search_terms(
 
     # 1. Check for exact matches
     for i, query in enumerate(queries):
-        if (exact_matches := find_exact_matches(query)):
+        if exact_matches := find_exact_matches(query):
             results[i] = [(hpo_id, 1.0) for hpo_id in exact_matches]
         else:
             to_embed.append(query)
@@ -375,11 +369,12 @@ def search_terms(
 
     return results
 
+
 ### FUNCTION CALLING FOR GEMINI ###
+
 
 # TOOLS
 def search_hpo_candidates(query: str, embedding_model, top_k: int = 15) -> List[Dict]:
-
     # The search_terms function expects a list of queries.
     search_results_with_scores = search_terms([query], embedding_model, top_k)[0]
 
@@ -391,18 +386,19 @@ def search_hpo_candidates(query: str, embedding_model, top_k: int = 15) -> List[
 
     return hpo_entries_with_scores
 
+
 def batch_search_hpo_candidates(queries: List[str], embedding_model) -> List[List[Dict]]:
     search_results = search_terms(queries, embedding_model, top_k=10)
 
     results = []
     for search_result in search_results:
         hpo_entries_with_scores = [
-            HPOEntry(hpo_id).to_dict() | {"score": score}
-            for hpo_id, score in search_result
+            HPOEntry(hpo_id).to_dict() | {"score": score} for hpo_id, score in search_result
         ]
         results.append(hpo_entries_with_scores)
 
     return results
+
 
 # def get_hpo_entry(hpo_id: str) -> Dict:
 #     """
@@ -455,9 +451,9 @@ def batch_search_hpo_candidates(queries: List[str], embedding_model) -> List[Lis
 #     except ValueError as e:
 #         return [{"error": str(e)}]
 
+
 def submit_annotations(
-    annotations: List[Dict[str, str]],
-    sentences: List[str]
+    annotations: List[Dict[str, str]], sentences: List[str]
 ) -> Dict[str, str | List[Dict[str, str]]]:
     validated_annotations = []
     errors = []
@@ -476,11 +472,9 @@ def submit_annotations(
         if valid_sentences:
             # Create annotation for each sentence where the span is found
             for sentence_idx in valid_sentences:
-                validated_annotations.append({
-                    "text_span": text_span,
-                    "hpo_id": hpo_id,
-                    "sentence_index": sentence_idx
-                })
+                validated_annotations.append(
+                    {"text_span": text_span, "hpo_id": hpo_id, "sentence_index": sentence_idx}
+                )
         else:
             errors.append(
                 f"Text span '{text_span}' not found as complete span within any single sentence"
@@ -490,7 +484,7 @@ def submit_annotations(
         "validated_annotations": validated_annotations,
         "errors": str(errors),
         "total_submitted": str(len(annotations)),
-        "total_validated": str(len(validated_annotations))
+        "total_validated": str(len(validated_annotations)),
     }
 
 
@@ -540,79 +534,83 @@ def validate_text_span_in_sentence(text_span: str, sentence: str) -> bool:
 
 
 TOOLS: List[types.FunctionDeclaration] = [
-    types.FunctionDeclaration(**{
-  "name": "batch_search_hpo_candidates",
-  "description": "Searches for HPO term candidates for a list of multiple queries in a single, efficient batch operation. Returns the top 6 results for each query.",  # noqa: E501
-  "parameters": {
-    "type": "OBJECT",
-    "properties": {
-      "queries": {
-        "type": "ARRAY",
-        "items": {
-          "type": "STRING"
-        },
-        "description": "A list of descriptive text queries for HPO terms."
-      }
-    },
-    "required": ["queries"]
-  }
-}),
-    types.FunctionDeclaration(**{
-  "name": "search_hpo_candidates",
-  "description": "Searches for Human Phenotype Ontology (HPO) term candidates based on a single descriptive query. Use this for targeted follow-up searches.",  # noqa: E501
-  "parameters": {
-    "type": "OBJECT",
-    "properties": {
-      "query": {
-        "type": "STRING",
-        "description": (
-            "A descriptive text query for a single HPO term "
-            "(e.g., 'atrial septal defect')."
-        )
-      },
-      "top_k": {
-        "type": "INTEGER",
-        "description": "Optional. The maximum number of candidate terms to return. Defaults to 15."
-      }
-    },
-    "required": ["query"]
-  }
-}),
-    types.FunctionDeclaration(**{
-  "name": "submit_answer",
-  "description": (
-      "Submit your final, complete list of phenotype mappings for the "
-      "entire document with validation."
-  ),
-  "parameters": {
-    "type": "OBJECT",
-    "properties": {
-      "mappings": {
-        "type": "ARRAY",
-        "description": "A list of all the phenotype mappings found in the document.",
-        "items": {
-          "type": "OBJECT",
-          "properties": {
-            "text_span": {
-              "type": "STRING",
-              "description": (
-                  "The exact text from a sentence that describes the phenotype. For discontinuous "
-                  "spans, connect the parts with ' -> ' (e.g., 'fingers -> short'). "
-                  "Must be entirely within a single sentence."
-              )
+    types.FunctionDeclaration(
+        **{
+            "name": "batch_search_hpo_candidates",
+            "description": "Searches for HPO term candidates for a list of multiple queries in a single, efficient batch operation. Returns the top 6 results for each query.",  # noqa: E501
+            "parameters": {
+                "type": "OBJECT",
+                "properties": {
+                    "queries": {
+                        "type": "ARRAY",
+                        "items": {"type": "STRING"},
+                        "description": "A list of descriptive text queries for HPO terms.",
+                    }
+                },
+                "required": ["queries"],
             },
-            "hpo_id": {
-              "type": "STRING",
-              "description": "A final, accurate HPO identifier (e.g., 'HP:0001631')."
-            }
-          },
-          "required": ["text_span", "hpo_id"]
         }
-      }
-    },
-    "required": ["mappings"]
-  }
-})
+    ),
+    types.FunctionDeclaration(
+        **{
+            "name": "search_hpo_candidates",
+            "description": "Searches for Human Phenotype Ontology (HPO) term candidates based on a single descriptive query. Use this for targeted follow-up searches.",  # noqa: E501
+            "parameters": {
+                "type": "OBJECT",
+                "properties": {
+                    "query": {
+                        "type": "STRING",
+                        "description": (
+                            "A descriptive text query for a single HPO term "
+                            "(e.g., 'atrial septal defect')."
+                        ),
+                    },
+                    "top_k": {
+                        "type": "INTEGER",
+                        "description": "Optional. The maximum number of candidate terms to return. Defaults to 15.",
+                    },
+                },
+                "required": ["query"],
+            },
+        }
+    ),
+    types.FunctionDeclaration(
+        **{
+            "name": "submit_answer",
+            "description": (
+                "Submit your final, complete list of phenotype mappings for the "
+                "entire document with validation."
+            ),
+            "parameters": {
+                "type": "OBJECT",
+                "properties": {
+                    "mappings": {
+                        "type": "ARRAY",
+                        "description": "A list of all the phenotype mappings found in the document.",
+                        "items": {
+                            "type": "OBJECT",
+                            "properties": {
+                                "text_span": {
+                                    "type": "STRING",
+                                    "description": (
+                                        "The exact text from a sentence that describes the phenotype. For discontinuous "
+                                        "spans, connect the parts with ' -> ' (e.g., 'fingers -> short'). "
+                                        "Must be entirely within a single sentence."
+                                    ),
+                                },
+                                "hpo_id": {
+                                    "type": "STRING",
+                                    "description": "A final, accurate HPO identifier (e.g., 'HP:0001631').",
+                                },
+                            },
+                            "required": ["text_span", "hpo_id"],
+                        },
+                    }
+                },
+                "required": ["mappings"],
+            },
+        }
+    ),
 ]
 
 SYSTEM_PROMPT = """

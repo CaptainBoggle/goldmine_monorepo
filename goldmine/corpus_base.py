@@ -61,5 +61,5 @@ class CorpusParser(ABC):
             description=self.get_description(),
             hpo_version=self.get_hpo_version(),
             corpus_version=self.get_version(),
-            entries=documents
+            entries=documents,
         )

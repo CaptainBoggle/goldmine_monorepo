@@ -49,8 +49,7 @@ async def run_tool_on_corpus(
         documents = corpus.entries
     except Exception as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"Error loading corpus '{corpus.name}': {str(e)}"
+            status_code=500, detail=f"Error loading corpus '{corpus.name}': {str(e)}"
         )
 
     if not documents:
@@ -60,10 +59,7 @@ async def run_tool_on_corpus(
     try:
         batch_input = {"documents": [doc.input.sentences for doc in documents]}
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error preparing batch input: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error preparing batch input: {str(e)}")
 
     # Call the tool's batch_predict endpoint
     async with httpx.AsyncClient() as client:
@@ -100,10 +96,7 @@ async def run_tool_on_corpus(
         session.commit()
     except Exception as e:
         session.rollback()
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error storing predictions: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error storing predictions: {str(e)}")
 
     return {
         "message": (

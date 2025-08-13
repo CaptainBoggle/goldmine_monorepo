@@ -37,7 +37,7 @@ class CorpusIngestionService:
 
         for corpus_dir in self.corpora_root.iterdir():
             # Need to filter garbage files/directories
-            if corpus_dir.is_dir() and not corpus_dir.name.startswith('.'):
+            if corpus_dir.is_dir() and not corpus_dir.name.startswith("."):
                 corpus_py = corpus_dir / "corpus.py"
                 if corpus_py.exists():
                     corpora[corpus_dir.name] = corpus_dir
@@ -52,10 +52,7 @@ class CorpusIngestionService:
         corpus_py = corpus_path / "corpus.py"
 
         try:
-            spec = importlib.util.spec_from_file_location(
-                f"{corpus_path.name}_parser",
-                corpus_py
-            )
+            spec = importlib.util.spec_from_file_location(f"{corpus_path.name}_parser", corpus_py)
             if spec is None or spec.loader is None:
                 print(f"Could not load spec for {corpus_py}")
                 return None
@@ -64,7 +61,7 @@ class CorpusIngestionService:
             spec.loader.exec_module(module)
 
             # Look for a 'parser' attribute that implements CorpusParser
-            if hasattr(module, 'parser') and isinstance(module.parser, CorpusParser):
+            if hasattr(module, "parser") and isinstance(module.parser, CorpusParser):
                 return module.parser
             else:
                 print(f"No valid parser found in {corpus_py}")
@@ -79,8 +76,7 @@ class CorpusIngestionService:
         Check if a corpus with the given name and version is already in the database.
         """
         statement = select(Corpus).where(
-            Corpus.name == corpus_name,
-            Corpus.corpus_version == version
+            Corpus.name == corpus_name, Corpus.corpus_version == version
         )
         result = self.session.exec(statement).first()
         return result is not None
@@ -103,8 +99,7 @@ class CorpusIngestionService:
         # Ensure the version isn't literally "latest" as that is a reserved keyword
         if version == "latest":
             print(
-                f"Corpus {corpus_name} has version 'latest', which is reserved! "
-                "Skipping ingestion."
+                f"Corpus {corpus_name} has version 'latest', which is reserved! Skipping ingestion."
             )
             return False
 

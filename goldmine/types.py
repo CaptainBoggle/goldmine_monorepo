@@ -1,13 +1,11 @@
 import re
 from enum import Enum
 from typing import List, Optional
-from unittest.mock import Base
 
 from pydantic import BaseModel, ConfigDict, computed_field, field_validator
 from pydantic import Field as BaseField
 from sqlalchemy import JSON
 from sqlmodel import Column, Field, Relationship, SQLModel
-
 
 
 class PhenotypeMatch(SQLModel):
@@ -25,6 +23,7 @@ class PhenotypeMatch(SQLModel):
 
     match_text: Optional[str] = Field("", description="Text that matched the phenotype")
 
+
 class ToolState(str, Enum):
     READY = "ready"
     BUSY = "busy"
@@ -33,8 +32,10 @@ class ToolState(str, Enum):
     ERROR = "error"
     UNLOADED = "unloaded"
 
+
 class ToolInput(SQLModel):
     """Base class for tool input"""
+
     sentences: List[str] = Field(..., description="List of sentences to be processed by the tool")
     # TODO: do we bother with parameters?
     # parameters: Dict[str, Any] = Field(
@@ -44,6 +45,7 @@ class ToolInput(SQLModel):
 
 class ToolOutput(SQLModel):
     """Base class for tool output"""
+
     results: List[List[PhenotypeMatch]] = Field(
         ..., description="List of of phenotype matches for each sentence"
     )
@@ -51,6 +53,7 @@ class ToolOutput(SQLModel):
 
 class ToolResponse(ToolOutput):
     """Response from the tool"""
+
     processing_time: Optional[float] = Field(
         None, description="Time taken to process the input in seconds"
     )
@@ -66,6 +69,7 @@ class ToolBatchOutput(SQLModel):
     results: List[List[List[PhenotypeMatch]]] = Field(
         ..., description="List of of phenotype matches for each document"
     )
+
 
 class ToolBatchResponse(ToolBatchOutput):
     processing_time: Optional[float] = Field(
@@ -123,32 +127,36 @@ class UnloadResponse(SQLModel):
 
 # External Recommender API types (INCEpTION compatibility)
 
+
 class ExternalRecommenderModel(BaseModel):
     """
     Base model for external recommender API
     """
+
     model_config = ConfigDict(
-        validate_by_alias=True,
-        validate_by_name=True,
-        serialize_by_alias=True
+        validate_by_alias=True, validate_by_name=True, serialize_by_alias=True
     )
+
 
 class ExternalRecommenderDocument(ExternalRecommenderModel):
     """
     Document for external recommender API
     https://inception-project.github.io/releases/37.1/docs/developer-guide.html#_external_recommender_api_document
     """
+
     document_id: Optional[int] = BaseField(
         None, alias="documentId", description="Identifier for this document"
     )
     user_id: Optional[str] = BaseField(None, alias="userId", description="Identifier for the user")
     xmi: Optional[str] = BaseField(None, description="CAS as XMI")
 
+
 class ExternalRecommenderMetadata(ExternalRecommenderModel):
     """
     Metadata for external recommender API
     https://inception-project.github.io/releases/37.1/docs/developer-guide.html#_external_recommender_api_metadata
     """
+
     layer: str = BaseField(..., description="Layer which should be predicted")
     feature: str = BaseField(..., description="Feature of the layer which should be predicted")
     project_id: int = BaseField(..., alias="projectId", description="The id of the project")
@@ -159,11 +167,13 @@ class ExternalRecommenderMetadata(ExternalRecommenderModel):
         ..., alias="crossSentence", description="True if cross-sentence annotations are supported"
     )
 
+
 class ExternalRecommenderPredictRequest(ExternalRecommenderModel):
     """
     Request for external recommender predict endpoint
     https://inception-project.github.io/releases/37.1/docs/developer-guide.html#_external_recommender_api_predictrequest
     """
+
     document: ExternalRecommenderDocument = BaseField(..., description="Document to predict")
     request_metadata: ExternalRecommenderMetadata = BaseField(
         ..., alias="metadata", description="Metadata for prediction"
@@ -176,6 +186,7 @@ class ExternalRecommenderPredictResponse(ExternalRecommenderModel):
     Response from external recommender predict endpoint
     https://inception-project.github.io/releases/37.1/docs/developer-guide.html#_external_recommender_api_predictresponse
     """
+
     document: str = BaseField(..., description="CAS with annotations as XMI")
 
 
@@ -193,15 +204,17 @@ class ToolDiscoveryInfo(SQLModel):
 # class BatchPredictionRequest(BaseModel):
 # class BatchPredictionResponse(BaseModel):
 
+
 class CorpusDocument(SQLModel, table=True):
     """Base class for corpus entries"""
+
     # each entry contains an input and output object
 
     # Database fields
     db_id: Optional[int] = Field(default=None, primary_key=True, description="Database ID")
     corpus_id: Optional[int] = Field(
         default=None, foreign_key="corpus.db_id", description="Foreign key to corpus", index=True
-        )
+    )
 
     name: str = Field(..., description="Name of the document", index=True)
     annotator: str = Field("Unknown", description="Name of the annotator")
@@ -211,13 +224,13 @@ class CorpusDocument(SQLModel, table=True):
         default_factory=dict,
         sa_column=Column(JSON),
         description="Serialised ToolInput",
-        exclude=True  # Hide from API responses
+        exclude=True,  # Hide from API responses
     )
     output_internal: dict = Field(
         default_factory=dict,
         sa_column=Column(JSON),
         description="Serialised ToolOutput",
-        exclude=True  # Hide from API responses
+        exclude=True,  # Hide from API responses
     )
 
     corpus: Optional["Corpus"] = Relationship(back_populates="entries")
@@ -234,7 +247,7 @@ class CorpusDocument(SQLModel, table=True):
         output: Optional[ToolOutput] = None,
         input_internal: Optional[dict] = None,
         output_internal: Optional[dict] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Initialise CorpusDocument with either ToolInput/ToolOutput objects or raw data.
@@ -252,7 +265,7 @@ class CorpusDocument(SQLModel, table=True):
             annotator=annotator,
             input_internal=input_internal or {},
             output_internal=output_internal or {},
-            **kwargs
+            **kwargs,
         )
 
         # If ToolInput/ToolOutput objects were passed, serialise them
@@ -284,9 +297,7 @@ class CorpusDocument(SQLModel, table=True):
         # Convert dict back to PhenotypeMatch objects
         results = []
         for sentence_results in self.output_internal.get("results", []):
-            sentence_matches = [
-                PhenotypeMatch.model_validate(match) for match in sentence_results
-            ]
+            sentence_matches = [PhenotypeMatch.model_validate(match) for match in sentence_results]
             results.append(sentence_matches)
         return ToolOutput(results=results)
 
@@ -306,8 +317,10 @@ class CorpusDocument(SQLModel, table=True):
         """Get the number of annotations in this document"""
         return sum(len(sentence_annotations) for sentence_annotations in self.output.results)
 
+
 class Corpus(SQLModel, table=True):
-    '''Base class for a corpus'''
+    """Base class for a corpus"""
+
     db_id: Optional[int] = Field(default=None, primary_key=True, description="Database ID")
 
     name: str = Field(..., description="Name of the corpus", index=True)
@@ -353,7 +366,7 @@ class Prediction(SQLModel, table=True):
         default_factory=dict,
         sa_column=Column(JSON),
         description="Serialised ToolOutput",
-        exclude=True  # Hide from API responses
+        exclude=True,  # Hide from API responses
     )
 
     document: "CorpusDocument" = Relationship(back_populates="predictions")
@@ -367,7 +380,7 @@ class Prediction(SQLModel, table=True):
         tool_version: str,
         output: Optional[ToolOutput] = None,
         output_internal: Optional[dict] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Initialise Prediction with either ToolOutput objects or raw data.
@@ -382,7 +395,7 @@ class Prediction(SQLModel, table=True):
             tool_name=tool_name,
             tool_version=tool_version,
             output_internal=output_internal or {},
-            **kwargs
+            **kwargs,
         )
 
         # If ToolOutput object was passed, serialise it
@@ -399,9 +412,7 @@ class Prediction(SQLModel, table=True):
         # Convert dict back to PhenotypeMatch objects
         results = []
         for sentence_results in self.output_internal.get("results", []):
-            sentence_matches = [
-                PhenotypeMatch.model_validate(match) for match in sentence_results
-            ]
+            sentence_matches = [PhenotypeMatch.model_validate(match) for match in sentence_results]
             results.append(sentence_matches)
         return ToolOutput(results=results)
 

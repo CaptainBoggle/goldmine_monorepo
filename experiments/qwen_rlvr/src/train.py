@@ -16,7 +16,7 @@ training_args.max_prompt_length = 256
 training_args.max_completion_length = 512
 training_args.save_steps = 25
 training_args.max_steps = 100
-training_args.max_concurrent=256
+training_args.max_concurrent = 256
 
 trainer = vf.GRPOTrainer(
     model=model,

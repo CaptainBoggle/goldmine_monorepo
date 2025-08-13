@@ -137,7 +137,6 @@ class ModelInterface(ABC):
             self.error_message = str(e)
             raise
 
-
     async def batch_predict(self, input_data: ToolBatchInput) -> ToolBatchResponse:
         """
         Public method to run prediction, used by the API layer.
@@ -157,7 +156,6 @@ class ModelInterface(ABC):
             self.state = ToolState.ERROR
             self.error_message = str(e)
             raise
-
 
     def get_status(self) -> ToolStatus:
         """

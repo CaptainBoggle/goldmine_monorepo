@@ -24,7 +24,7 @@ def get_hash_for_file_types_in_path(path: Path, types: List[str]) -> str:
     matched_paths.sort()
     m = hashlib.sha1()
     for p in matched_paths:
-        digest = hashlib.file_digest(open(p, 'rb'), 'sha1')
+        digest = hashlib.file_digest(open(p, "rb"), "sha1")
         m.update(digest.digest())
     hash_sha1 = m.hexdigest()
     return hash_sha1
@@ -34,7 +34,7 @@ class TinyCorpusParser(CorpusParser):
     """Parser for the tiny_corpus BioC XML format (tiny subset for fast testing)."""
 
     def get_hpo_version(self) -> str:
-        return "2024-02-08" # from the corpus annotation guidelines
+        return "2024-02-08"  # from the corpus annotation guidelines
 
     def get_description(self) -> str:
         return (
@@ -68,70 +68,75 @@ class TinyCorpusParser(CorpusParser):
         tree = ET.parse(xml_path)
         root = tree.getroot()
         doc_id = xml_path.parent.name
-        key_element = root.find('.//key')
+        key_element = root.find(".//key")
         annotator = key_element.text if key_element is not None else "lwit"
         sentences = []
         sentence_annotations = []
-        document = root.find('.//document')
+        document = root.find(".//document")
         if document is not None:
-            passage = document.find('passage')
+            passage = document.find("passage")
             if passage is not None:
-                for sentence in passage.findall('sentence'):
-                    text_element = sentence.find('text')
+                for sentence in passage.findall("sentence"):
+                    text_element = sentence.find("text")
                     if text_element is not None and text_element.text:
                         sentence_text = text_element.text.strip()
                         sentences.append(sentence_text)
                         matches = []
                         annotations_by_id = {}
-                        for annotation in sentence.findall('annotation'):
-                            ann_id = annotation.get('id')
-                            text_elem = annotation.find('text')
-                            location_elem = annotation.find('location')
+                        for annotation in sentence.findall("annotation"):
+                            ann_id = annotation.get("id")
+                            text_elem = annotation.find("text")
+                            location_elem = annotation.find("location")
                             annotations_by_id[ann_id] = {
-                                'text': text_elem.text if text_elem is not None else "",
-                                'offset': (int(location_elem.get('offset', 0))
-                                    if location_elem is not None else 0),
-                                'hpo_term': None
+                                "text": text_elem.text if text_elem is not None else "",
+                                "offset": (
+                                    int(location_elem.get("offset", 0))
+                                    if location_elem is not None
+                                    else 0
+                                ),
+                                "hpo_term": None,
                             }
                             hpo_elem = annotation.find("infon[@key='HPOterm']")
                             if hpo_elem is not None:
-                                annotations_by_id[ann_id]['hpo_term'] = hpo_elem.text
+                                annotations_by_id[ann_id]["hpo_term"] = hpo_elem.text
                         for ann_id, ann_data in annotations_by_id.items():
-                            if ann_data['hpo_term']:
-                                hpo_url = ann_data['hpo_term']
-                                if hpo_url and 'HP_' in hpo_url:
-                                    hpo_id = hpo_url.split('/')[-1].replace('_', ':')
+                            if ann_data["hpo_term"]:
+                                hpo_url = ann_data["hpo_term"]
+                                if hpo_url and "HP_" in hpo_url:
+                                    hpo_id = hpo_url.split("/")[-1].replace("_", ":")
                                     if re.match(r"^HP:[0-9]+$", hpo_id):
-                                        matches.append(PhenotypeMatch(
-                                            id=hpo_id,
-                                            match_text=ann_data['text']
-                                        ))
-                        for relation in sentence.findall('relation'):
+                                        matches.append(
+                                            PhenotypeMatch(id=hpo_id, match_text=ann_data["text"])
+                                        )
+                        for relation in sentence.findall("relation"):
                             hpo_elem = relation.find("infon[@key='HPOterm']")
                             if hpo_elem is not None:
                                 hpo_url = hpo_elem.text
-                                if hpo_url and 'HP_' in hpo_url:
-                                    hpo_id = hpo_url.split('/')[-1].replace('_', ':')
+                                if hpo_url and "HP_" in hpo_url:
+                                    hpo_id = hpo_url.split("/")[-1].replace("_", ":")
                                     if re.match(r"^HP:[0-9]+$", hpo_id):
                                         source_node = relation.find("node[@role='source']")
                                         target_node = relation.find("node[@role='target']")
                                         if source_node is not None and target_node is not None:
-                                            source_id = source_node.get('refid')
-                                            target_id = target_node.get('refid')
+                                            source_id = source_node.get("refid")
+                                            target_id = target_node.get("refid")
                                             source_data = annotations_by_id.get(source_id, {})
                                             target_data = annotations_by_id.get(target_id, {})
-                                            source_offset = source_data.get('offset', 0)
-                                            target_offset = target_data.get('offset', 0)
+                                            source_offset = source_data.get("offset", 0)
+                                            target_offset = target_data.get("offset", 0)
                                             if source_offset < target_offset:
-                                                match_text = (f"{source_data.get('text', '')}"
-                                                              f" -> {target_data.get('text', '')}")
+                                                match_text = (
+                                                    f"{source_data.get('text', '')}"
+                                                    f" -> {target_data.get('text', '')}"
+                                                )
                                             else:
-                                                match_text = (f"{target_data.get('text', '')}"
-                                                              f" <- {source_data.get('text', '')}")
-                                            matches.append(PhenotypeMatch(
-                                                id=hpo_id,
-                                                match_text=match_text
-                                            ))
+                                                match_text = (
+                                                    f"{target_data.get('text', '')}"
+                                                    f" <- {source_data.get('text', '')}"
+                                                )
+                                            matches.append(
+                                                PhenotypeMatch(id=hpo_id, match_text=match_text)
+                                            )
                         sentence_annotations.append(matches)
         if len(sentences) != len(sentence_annotations):
             raise ValueError(
@@ -143,8 +148,9 @@ class TinyCorpusParser(CorpusParser):
             name=doc_id,
             annotator=annotator or "lwit",
             input=ToolInput(sentences=sentences),
-            output=ToolOutput(results=sentence_annotations)
+            output=ToolOutput(results=sentence_annotations),
         )
+
 
 # Create the parser instance that will be imported by the corpus ingestion system
 parser = TinyCorpusParser()
