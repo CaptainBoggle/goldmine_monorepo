@@ -7,7 +7,7 @@ export function usePerformanceAPI() {
   const [selectedTool, setSelectedTool] = useState('');
   const [selectedCorpus, setSelectedCorpus] = useState('');
   const [selectedCorpusVersion, setSelectedCorpusVersion] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [isPredicting, setIsPredicting] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [metrics, setMetrics] = useState(null);

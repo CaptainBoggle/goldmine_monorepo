@@ -203,7 +203,7 @@ function BarChart({ selectedCorpora, selectedMetrics, metricsData, tools }) {
 }
 
 function EvaluationPage() {
-  const { tools, corpora, metricsData, isLoading, error, clearError, fetchAllMetrics, lastFetchTime, hasInitialData, lastUpdatedCorpus } = useEvaluationAPI();
+  const { tools, corpora, metricsData, isLoading, error, clearError, fetchAllMetrics, lastUpdatedCorpus } = useEvaluationAPI();
   const [selectedCorpus, setSelectedCorpus] = useState('');
   const [selectedCorpusVersion, setSelectedCorpusVersion] = useState('');
   const [selectedMetrics, setSelectedMetrics] = useState(['accuracy']);

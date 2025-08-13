@@ -1,6 +1,5 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { usePerformanceAPI } from '../usePerformanceAPI';
-import { useEvaluationAPI } from '../useEvaluationAPI';
 
 // Mock the LoadingContext with realistic implementations
 jest.mock('../../contexts/LoadingContext', () => ({

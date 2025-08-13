@@ -335,7 +335,7 @@ describe('usePerformanceAPI', () => {
       const { result } = renderHook(() => usePerformanceAPI());
 
       // Mock the loadModel function to track calls
-      const originalLoadModel = result.current.loadModel;
+      // const originalLoadModel = result.current.loadModel;
       const mockLoadModel = jest.fn();
       result.current.loadModel = mockLoadModel;
 

@@ -8,7 +8,6 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
   const [input, setInput] = useState('The last child is a 6-year-old boy. At 36 weeks 3D ultrasonography showed telecanthus, short nose, long philtrum and short femur (Fig. 3A).');
   const [inputMode, setInputMode] = useState('text'); // 'text' or 'file'
   const [fileContent, setFileContent] = useState('');
-  const [fileName, setFileName] = useState('');
   const [lastAnalyzedText, setLastAnalyzedText] = useState('');
   const [lastAction, setLastAction] = useState(''); // Track the last action performed
   const [hasRunAnalysis, setHasRunAnalysis] = useState(false); // Track if analysis has been run in this session
@@ -31,7 +30,6 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
 
   const handleFileSelect = (content, name) => {
     setFileContent(content);
-    setFileName(name);
   };
 
   const handleRunAnalysis = () => {
