@@ -9,7 +9,6 @@ dependencies = [
     "psycopg2-binary>=2.9.0",
     "sqlalchemy>=2.0.0",
     "sqlmodel>=0.0.14",
-    "evaluate>=0.4.0",
     "scikit-learn>=1.3.0"
 ]
 
@@ -20,3 +19,11 @@ dev = [
 
 [tool.uv.sources]
 goldmine = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "pytest-mock>=3.14.1",
+]
