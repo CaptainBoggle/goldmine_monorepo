@@ -1,9 +1,14 @@
 from typing import List
 
-import evaluate
 import numpy as np
 from fastapi import APIRouter, Depends, HTTPException
-from sklearn.metrics import jaccard_score
+from sklearn.metrics import (
+    accuracy_score,
+    f1_score,
+    jaccard_score,
+    precision_score,
+    recall_score,
+)
 from sklearn.preprocessing import MultiLabelBinarizer
 from sqlmodel import Session, select
 
@@ -24,7 +29,7 @@ router = APIRouter()
 def calculate_evaluation_metrics(
     predictions: List[List[str]], ground_truth_labels: List[List[str]]
 ) -> EvaluationResult:
-    """Calculates evaluation metrics using the huggingface evaluate library."""
+    """Calculates evaluation metrics using scikit-learn."""
 
     all_labels = ground_truth_labels + predictions
     mlb = MultiLabelBinarizer()
@@ -32,23 +37,18 @@ def calculate_evaluation_metrics(
     binarized_ground_truth = mlb.transform(ground_truth_labels).astype(np.int32)
     binarized_predictions = mlb.transform(predictions).astype(np.int32)
 
-    accuracy_metric = evaluate.load("accuracy", "multilabel")
-    f1_metric = evaluate.load("f1", "multilabel")
-    precision_metric = evaluate.load("precision", "multilabel")
-    recall_metric = evaluate.load("recall", "multilabel")
-
-    accuracy = accuracy_metric.compute(
-        predictions=binarized_predictions, references=binarized_ground_truth
-    )["accuracy"]
-    f1 = f1_metric.compute(
-        predictions=binarized_predictions, references=binarized_ground_truth, average="micro"
-    )["f1"]
-    precision = precision_metric.compute(
-        predictions=binarized_predictions, references=binarized_ground_truth, average="micro"
-    )["precision"]
-    recall = recall_metric.compute(
-        predictions=binarized_predictions, references=binarized_ground_truth, average="micro"
-    )["recall"]
+    accuracy = float(accuracy_score(binarized_ground_truth, binarized_predictions))
+    f1 = float(f1_score(binarized_ground_truth, binarized_predictions, average="micro"))
+    precision = float(
+        precision_score(
+            binarized_ground_truth, binarized_predictions, average="micro", zero_division=0
+        )
+    )
+    recall = float(
+        recall_score(
+            binarized_ground_truth, binarized_predictions, average="micro", zero_division=0
+        )
+    )
     jaccard = float(jaccard_score(binarized_ground_truth, binarized_predictions, average="micro"))
 
     return EvaluationResult(
