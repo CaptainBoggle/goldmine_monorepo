@@ -184,7 +184,6 @@ export function usePerformanceAPI() {
     startLoading(); // Prevent navigation during prediction
 
     try {
-      // Check if predictions already exist
       const predictionsExist = await checkExistingPredictions();
       
       if (predictionsExist) {
@@ -265,7 +264,6 @@ export function usePerformanceAPI() {
     startLoading(); // Prevent navigation during evaluation
 
     try {
-      // Check if metrics already exist
       const existingMetrics = await checkExistingMetrics();
       
       if (existingMetrics) {

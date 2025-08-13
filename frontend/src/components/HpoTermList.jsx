@@ -30,7 +30,6 @@ function HpoTermList({ matches }) {
     uniqueIds.forEach(id => {
       fetchHpo(id);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(uniqueMatches)]);
 
   return (

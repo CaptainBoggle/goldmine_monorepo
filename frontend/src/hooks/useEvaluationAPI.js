@@ -61,7 +61,6 @@ export function useEvaluationPreload() {
   }, [tools, corpora, hasInitialData]);
 
   const fetchTools = async () => {
-    // Cancel any existing request
     if (toolsAbortController.current) {
       toolsAbortController.current.abort();
     }
@@ -94,7 +93,6 @@ export function useEvaluationPreload() {
   };
 
   const fetchCorpora = async () => {
-    // Cancel any existing request
     if (corporaAbortController.current) {
       corporaAbortController.current.abort();
     }
@@ -127,7 +125,6 @@ export function useEvaluationPreload() {
   };
 
   const fetchAllMetrics = async () => {
-    // Cancel any existing request
     if (metricsAbortController.current) {
       metricsAbortController.current.abort();
     }
@@ -242,14 +239,12 @@ export function useEvaluationPreload() {
     }
     setLastRefreshTime(now);
     
-    // Cancel any existing request and ensure cleanup
     if (metricsAbortController.current) {
       console.log('Cancelling existing request...');
       metricsAbortController.current.abort();
       metricsAbortController.current = null;
     }
     
-    // Wait a bit for cleanup
     await new Promise(resolve => setTimeout(resolve, 100));
     
     metricsAbortController.current = new AbortController();
@@ -411,7 +406,6 @@ export function useEvaluationPreload() {
               await new Promise(resolve => setTimeout(resolve, 3000));
             }
           }
-          // Continue with other tools even if one fails
         }
       }
       

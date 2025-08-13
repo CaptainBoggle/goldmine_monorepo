@@ -242,7 +242,7 @@ function EvaluationPage() {
 
   const handleCorpusChange = (corpusName) => {
     setSelectedCorpus(corpusName);
-    setSelectedCorpusVersion(''); // Reset version when corpus changes
+    setSelectedCorpusVersion('');
   };
 
   const handleVersionChange = (version) => {
@@ -270,11 +270,11 @@ function EvaluationPage() {
       .filter(data => data.corpus === corpusKey && data.corpusVersion === versionKey)
       .map(data => ({
         tool: data.tool,
-        accuracy: (data.accuracy || 0) * 100, // Convert to percentage
-        precision: (data.precision || 0) * 100, // Convert to percentage
-        recall: (data.recall || 0) * 100, // Convert to percentage
-        f1: (data.f1 || 0) * 100, // Convert to percentage
-        jaccard: (data.jaccard || 0) * 100, // Convert to percentage
+        accuracy: (data.accuracy || 0) * 100,
+        precision: (data.precision || 0) * 100,
+        recall: (data.recall || 0) * 100,
+        f1: (data.f1 || 0) * 100,
+        jaccard: (data.jaccard || 0) * 100,
       }));
   };
 

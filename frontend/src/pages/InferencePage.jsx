@@ -26,7 +26,6 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
   let matches = [];
   try {
     parsedResult = typeof result === 'string' ? JSON.parse(result) : result;
-    // Flatten all matches from all sentences
     matches = (parsedResult?.results || []).flat();
   } catch (e) {}
 
@@ -57,8 +56,8 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
     }
     setLastAnalyzedText(textToAnalyze);
     localStorage.setItem('inference_lastAnalyzedText', textToAnalyze);
-    setLastAction('predict'); // Mark this as a prediction action
-    setHasRunAnalysis(true); // Mark that analysis has been run in this session
+    setLastAction('predict');
+    setHasRunAnalysis(true);
     callApi('/predict', 'POST', dataToSend);
   };
 

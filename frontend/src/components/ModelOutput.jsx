@@ -32,7 +32,6 @@ function ModelOutput({ loading, result, originalText, hasRunAnalysis }) {
     uniqueIds.forEach(id => {
       fetchHpo(id);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(matches)]);
 
   // Annotate text with spans for each match
@@ -125,7 +124,6 @@ function ModelOutput({ loading, result, originalText, hasRunAnalysis }) {
     content = <div className="model-output-result pre-wrap">{renderAnnotated(annotated)}</div>;
   } else if (hasRunAnalysis && result && parsedResult && originalText && matches.length === 0 && parsedResult.results) {
     // Show original text if we have a valid prediction result but no matches
-    // Only show this if parsedResult.results exists (indicating it's a prediction response)
     content = <div className="model-output-result pre-wrap">{originalText}</div>;
   } else {
     // Don't show anything for non-prediction results (model actions) or when no analysis has been run
