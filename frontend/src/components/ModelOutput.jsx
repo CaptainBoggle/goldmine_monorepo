@@ -69,10 +69,6 @@ function ModelOutput({ loading, result, originalText, hasRunAnalysis }) {
       const { match_text, id } = token;
       const details = hpoDetails[id];
       const isValid = details?.valid;
-      let color = '#facc15'; // orange while loading
-      if (!fetching[id]) {
-        color = isValid === true ? '#4ade80' : '#f87171';
-      }
       // Determine CSS class based on validation state
       const annotatedClass = getAnnotatedTextClass(fetching[id], isValid);
       
