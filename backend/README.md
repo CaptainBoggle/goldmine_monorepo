@@ -8,6 +8,7 @@ FastAPI service that orchestrates corpus ingestion, tool discovery, prediction s
 - Discover tool containers from `tools/compose.yml` (no hard-coded registry).
 - Proxy requests to tool containers (load, predict, unload) with consistent schemas.
 - Store tool predictions and compute evaluation metrics (accuracy, precision, recall, F1, Jaccard) at sentence granularity.
+- Provide an INCEpTION-compatible external recommender endpoint (CAS/XMI) for tools.
 
 ## Startup Lifecycle
 1. Container starts (see `backend/Dockerfile`).
@@ -18,6 +19,14 @@ FastAPI service that orchestrates corpus ingestion, tool discovery, prediction s
    - Runs `CorpusIngestionService.ingest_all_corpora()` on `/app/corpora` (copied in image) – each subdirectory with `corpus.py` is parsed and added if version not already present.
 3. Routers registered; service ready.
 
+## Reverse Proxy & HTTPS
+The backend container runs Uvicorn on an internal loopback port (8001) and frontends traffic through Nginx:
+- HTTP: external port 8000 (proxied to 8001)
+- HTTPS: external port 8443 (self-signed certificate)
+
+Certificates are generated at build time into `/app/certs/` using OpenSSL. The purpose
+of the HTTPS endpoint is purely for compatibility with INCEpTION's external recommender API, which requires TLS. This is not a security feature and should not be relied upon for protecting sensitive data.
+
 ## Architecture Overview
 
 Component layers:
@@ -25,6 +34,7 @@ Component layers:
 - Services: `database.py`, `corpus_ingestion.py`, `tool_service.py` encapsulate infrastructure concerns.
 - Domain Models: Pydantic/SQLModel classes in `goldmine/types.py`.
 - External Tools: Separate containers implementing `ModelInterface` (see `tools/`).
+- Reverse Proxy: Nginx (in-container) handling TLS termination and forwarding to Uvicorn.
 
 Key modules:
 - `main.py` – App assembly, global exception handling.
@@ -38,7 +48,6 @@ Key modules:
   - `corpora.py` – CRUD + pagination + random selection for corpus documents.
   - `predictions.py` – Batch inference of a tool across a corpus; stores predictions.
   - `metrics.py` – Derives evaluation metrics from stored predictions.
-
 
 ## Corpus Ingestion Details
 - A corpus directory must contain `corpus.py` defining a `parser: CorpusParser` instance.
@@ -83,6 +92,7 @@ docker compose up backend
 # Tail logs
 docker logs -f backend
 ```
+HTTP and HTTPS are both proxied through Nginx; Uvicorn remains on 8001 internally.
 
 ## Adding a New Router
 1. Create file in `backend/app/routers/` with APIRouter instance.
@@ -103,6 +113,7 @@ Interactive docs: `GET /docs` (Swagger UI)
 - / (root), /health
 - /tools/ – list discovered tool services
 - /proxy/{tool}/(status|info|load|unload|predict|batch_predict)
+- /proxy/{tool}/external-recommender/predict – INCEpTION external recommender proxy
 - /corpora/ – list corpora
 - /corpora/{name}/{version} – corpus metadata (use literal `latest` for newest)
 - /corpora/{name}/{version}/documents – paginated docs
@@ -119,4 +130,5 @@ Rebuild backend image if:
 - `goldmine/` types change
 - New / modified corpora
 - `tools/compose.yml` changes (to refresh discovery; restart only if volume-mounted)
+- Nginx / TLS configuration changes (Dockerfile adjustments)
 
