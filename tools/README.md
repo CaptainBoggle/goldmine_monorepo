@@ -5,6 +5,7 @@ This directory contains modular phenotype recognition tools (models / agents) th
 Design:
 - Each tool has its own dependency environment + container.
 - Standard endpoints for introspection and use (`/status`, `/info`, `/load`, `/predict`, `/batch_predict`, `/unload`).
+- Additionally, tools expose an INCEpTION-compatible endpoint: `/external-recommender/predict` (CAS/XMI) automatically added by `create_app()` for integration with annotation platforms supporting the External Recommender API.
 - Backend reads `tools/compose.yml` to discover tool service names and ports.
 - New tools can be added without modifying backend code (provided they implement the interface).
 
@@ -42,19 +43,23 @@ Endpoint summary:
 - POST `/predict` -> ToolResponse (single document: list of sentences)
 - POST `/batch_predict` -> ToolBatchResponse (list of documents)
 - POST `/unload` -> UnloadResponse (frees resources)
+- POST `/external-recommender/predict` -> INCEpTION External Recommender API (CAS XMI in/out)
 
 Input Models:
 - ToolInput: `{ sentences: [str, ...] }`
 - ToolBatchInput: `{ documents: [[str, ...], ...] }`
+- External recommender: `ExternalRecommenderPredictRequest` (includes `typeSystem`, `metadata` (layer, feature), `document` (XMI))
 
 Output Models:
 - ToolOutput / ToolResponse: `results: List[List[PhenotypeMatch]]` (outer list matches input sentence order)
 - PhenotypeMatch: `{ id: "HP:0001250", match_text: "seizures" }`
+- External recommender: `ExternalRecommenderPredictResponse` containing updated XMI with annotations on the requested layer/feature
 
 ## Life Cycle and States
 
 States (ToolState enum): UNLOADED -> LOADING -> READY -> (BUSY transient) -> UNLOADING -> UNLOADED. Any failure sets ERROR.
 - You must call `/load` before `/predict` (backend or UI can orchestrate this).
+- The external recommender endpoint will auto-load the model if not already loaded (lazy load behavior through `model_implementation.load()`).
 
 ## Adding a New Tool
 
@@ -77,10 +82,7 @@ States (ToolState enum): UNLOADED -> LOADING -> READY -> (BUSY transient) -> UNL
        async def _predict(self, input: ToolInput) -> ToolOutput:
            results = []
            for sent in input.sentences:
-               matches = []
-               for kw,hpo in self.model["keyword_map"].items():
-                   if kw in sent.lower():
-                       matches.append(PhenotypeMatch(id=hpo, match_text=kw))
+               matches = [PhenotypeMatch(id=hpo, match_text=kw) for kw, hpo in self.model["keyword_map"].items() if kw in sent.lower()]
                results.append(matches)
            return ToolOutput(results=results)
        def _get_model_info(self) -> ToolInfo:
@@ -104,30 +106,25 @@ States (ToolState enum): UNLOADED -> LOADING -> READY -> (BUSY transient) -> UNL
    EXPOSE 8000
    CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
    ```
-6. Update `tools/compose.yml` with new service:
-   ```yaml
-   my-new-tool:
-     build:
-       context: ..
-       dockerfile: tools/my-new-tool/Dockerfile
-     container_name: my-new-tool
-     networks:
-       - goldmine-network
-     ports:
-       - "6006:8000"
-   ```
-Note that the external `ports` mapping allows you to access the tool's API at `http://localhost:6006/`. Because of this, the external port must be unique across all services.
-
+6. Update `tools/compose.yml` with new service and unique external port.
 7. (Optional) Mount volumes for large weights instead of copying into image.
-8. Run stack: from repo root `docker compose up --build`.
-9. Verify: `curl http://localhost:6006/info` and `/load`, then `/predict`.
+8. Run stack: `docker compose up --build`.
+9. Verify: `curl http://localhost:<port>/info` and `/load`, then `/predict`.
+Alternatively, use the backend tool proxy: `curl http://localhost:8000/proxy/my-new-tool/info`
 10. Commit new directory + compose change.
 
-## Environment Variables & Volumes
+## External Recommender Annotations
+The `/external-recommender/predict` route expects a CAS XMI plus its TypeSystem XML. The tool implementation (provided by `create_app`) will:
+1. Ensure the model is loaded (lazy load).
+2. Extract raw text from `_InitialView`.
+3. Run standard `_predict` producing `PhenotypeMatch` objects.
+4. For each match, locate exact text occurrences and create annotations in the specified layer; the target feature is populated with an HPO term URI, and optional score/score_explanation fields are added if defined.
 
-- Example: `hpo-agent` requires `GOOG_API` (Gemini key). Passed via `environment:` in compose.
-  In practice you set this when you run the stack, e.g. `GOOG_API=your_key docker compose up --build`.
-- Model assets (weights, vector DBs) can be mounted using `volumes:` to avoid baking into image. See `hpo-agent` volume mounts.
+If custom anchoring or offset logic is needed (e.g., token alignment, case-insensitive matching, overlapping spans), extend the API factory or override inside the tool before returning `app`.
+
+## Environment Variables & Volumes
+- Example: `hpo-agent` requires `GOOG_API` (Gemini key). Provided via `environment:` in compose (e.g. `GOOG_API=xxx docker compose up`).
+- Large assets (weights, indexes) can be mounted as volumes to avoid rebuilding images when content changes.
 
 ## Performance Tips
 
@@ -151,4 +148,4 @@ Return a stable, semver-like string from `_get_model_info().version`. Bump when 
 - Optionally delete directory (preserving via git history). Database predictions remain for reproducibility.
 
 ---
-For more details see `goldmine/toolkit/interface.py` and existing tool examples.
+For more details see `goldmine/toolkit/interface.py`, `goldmine/toolkit/api.py`, and existing tool examples.
