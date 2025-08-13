@@ -106,6 +106,12 @@ def create_app(model_implementation: ModelInterface):
         INCEpTION External Recommender API endpoint.
         This endpoint follows the INCEpTION specification for external recommenders.
         """
+
+        # Load the model lazily since this can be used without the frontend
+        # and in theory without the backend either
+        if not model_implementation.model_loaded:
+            await model_implementation.load()
+
         try:
             print("Received request:", request) # debugging
             print("Request metadata:", request.request_metadata) # debuggin
@@ -120,17 +126,11 @@ def create_app(model_implementation: ModelInterface):
 
             view = cas.get_view('_InitialView')
             text = view.sofa_string
-            print("Text from _InitialView:", repr(text)) # debuggin
+            print("Text from _InitialView:", repr(text))
 
             # Run prediction using the model interface
             tool_input = ToolInput(sentences=[text])
             tool_output = await model_implementation.predict(tool_input)
-
-            # mock test
-            # tool_output = ToolOutput(results=[[
-            #     PhenotypeMatch(id="HP:0001250", match_text="epilepsy"),
-            #     PhenotypeMatch(id="HP:0000707", match_text="autism")
-            # ]])
 
             for match in tool_output.results[0]:
                 match_text = match.match_text or ""
