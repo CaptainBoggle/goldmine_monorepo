@@ -488,11 +488,11 @@ def validate_text_span_in_document(text_span: str, sentences: List[str]) -> List
     """
     Validate that a text span exists within at least one sentence boundary in the document.
     Handles both continuous spans and discontinuous spans (with ->).
-    
+
     Args:
         text_span: The text span to validate
         sentences: The list of sentences in the document
-        
+
     Returns:
         List of sentence indices where the text span is found completely within sentence boundaries
     """
@@ -510,11 +510,11 @@ def validate_text_span_in_sentence(text_span: str, sentence: str) -> bool:
     Validate that a text span exists in the sentence.
     Handles both continuous spans and discontinuous spans (with ->).
     Ignores whitespace characters like \\r, \\n, \\t when matching.
-    
+
     Args:
         text_span: The text span to validate
         sentence: The sentence to search in
-        
+
     Returns:
         True if the text span is valid, False otherwise
     """
@@ -603,7 +603,7 @@ You are an expert biomedical annotator specializing in Human Phenotype Ontology 
 You will receive a document formatted as numbered sentences. You should:
 
 1. **Process the entire document** for context and comprehensive phenotype identification
-2. **Annotate all abnormal phenotypes** you find throughout the document  
+2. **Annotate all abnormal phenotypes** you find throughout the document
 3. **Use exact text spans** that appear in the document - focus on finding valid phenotypes
 4. **Trust the validation system** - if you identify a valid phenotype, annotate it
 
@@ -694,7 +694,7 @@ You MUST follow these rules.
 
 ### Rule 1: What to Annotate
 -   **Abnormal Only:** Only annotate abnormal phenotypes. Explicitly ignore statements of normality (e.g., 'normal intelligence') or absence of a condition (e.g., 'no kidney anomalies were found').
--   **Negation Handling:** Do NOT annotate conditions when text explicitly states their absence using phrases like "no [condition]", "does not have [condition]", "absent [condition]", or "without [condition]". 
+-   **Negation Handling:** Do NOT annotate conditions when text explicitly states their absence using phrases like "no [condition]", "does not have [condition]", "absent [condition]", or "without [condition]".
     - Example: "no spontaneous movements" → Do NOT annotate movement disorders
     - Example: "does not have hepatomegaly" → Do NOT annotate HP:0002240 (Hepatomegaly)
 -   **Assume Abnormality:** Interpret seemingly normal features as abnormal if the author mentioned them (e.g., 'hands are flexible' implies 'hypermobility') without explicit normality.
@@ -726,7 +726,7 @@ When encountering cone-shaped epiphyses, choose the appropriate specificity:
 
 **Use SPECIFIC terms when text mentions specific anatomy:**
 - Text: "phalangeal cone-shaped epiphyses" or "cone-shaped epiphyses of the phalanges" → Use **HP:0034281** (Phalangeal cone-shaped epiphyses)
-- Text: "cone-shaped metacarpal epiphyses" or "metacarpal cones" → Use **HP:0006059** (Cone-shaped metacarpal epiphyses)  
+- Text: "cone-shaped metacarpal epiphyses" or "metacarpal cones" → Use **HP:0006059** (Cone-shaped metacarpal epiphyses)
 - Text: "cone-shaped capital femoral epiphysis" or "pointed femoral epiphysis" → Use **HP:0008789** (Cone-shaped capital femoral epiphysis)
 
 **Use GENERAL term only when text is non-specific:**
@@ -736,7 +736,7 @@ When encountering cone-shaped epiphyses, choose the appropriate specificity:
 - ✅ CORRECT: "cone shaped epiphyses of type 19, 25, and 28" (phalanges context) → HP:0034281
 - ❌ INCORRECT: "cone shaped epiphyses of type 19, 25, and 28" → HP:0010579 (too general)
 
-#### Ear Morphology Terms  
+#### Ear Morphology Terms
 Match the specificity level mentioned in the text:
 
 **Use GENERAL terms for general descriptions:**
@@ -763,7 +763,7 @@ Match the specificity level mentioned in the text:
 - ✅ CORRECT: "postaxial polydactyly" → Only HP:0100259 (Postaxial polydactyly)
 - ❌ INCORRECT: "postaxial polydactyly" → Both HP:0100259 (Postaxial polydactyly) AND HP:0010442 (Polydactyly)
 
-- ✅ CORRECT: "short 2nd metacarpal" → Only HP:0010047 (Short 2nd metacarpal)  
+- ✅ CORRECT: "short 2nd metacarpal" → Only HP:0010047 (Short 2nd metacarpal)
 - ❌ INCORRECT: "short 2nd metacarpal" → Both HP:0010047 (Short 2nd metacarpal) AND HP:0006498 (Short metacarpal)
 
 #### When Multiple Annotations ARE Appropriate:
