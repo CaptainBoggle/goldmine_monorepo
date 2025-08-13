@@ -7,12 +7,14 @@ Goldmine is a modular platform for benchmarking Human Phenotype Ontology (HPO) e
 - Runs multiple phenotype extraction tools (each isolated in its own container) on those corpora.
 - Stores predictions & computes sentence‑level multilabel metrics (accuracy, precision, recall, F1, Jaccard).
 - Exposes data + operations via a FastAPI backend and a React frontend.
+- Provides optional INCEpTION External Recommender (CAS/XMI) integration for tools.
 
 ## Stack
 | Component | Tech | Default URL |
 |-----------|------|-------------|
 | Frontend UI | React + Tailwind | http://localhost:3000 |
-| Backend API | FastAPI | http://localhost:8000 |
+| Backend API (HTTP) | FastAPI via Nginx reverse proxy | http://localhost:8000 |
+| Backend API (HTTPS, self-signed) | FastAPI via Nginx | https://localhost:8443 |
 | Database | PostgreSQL | localhost:5432 |
 | Tools (models) | FastAPI microservices | 6001+ |
 
@@ -118,6 +120,12 @@ Clean rebuild (ignore cache):
 docker compose build --no-cache && docker compose up
 ```
 
+## HTTPS & Reverse Proxy
+Backend container includes Nginx:
+- Terminates TLS with a self-signed certificate generated at build time in `/app/certs`.
+- Proxies HTTP (8000) and HTTPS (8443) to internal Uvicorn (loopback 127.0.0.1:8001).
+To use custom certs, mount a volume over `/app/certs` containing `cert.pem` and `key.pem` (PEM format) and rebuild or restart.
+
 ## Repository Layout
 ```
 backend/     FastAPI service (ingestion, proxy, metrics)
@@ -154,11 +162,21 @@ uv run ruff format .
 uv run ruff check .
 ```
 
+## External Recommender (INCEpTION)
+Tools expose an optional endpoint:
+- Tool local: `POST /external-recommender/predict`
+- Via backend proxy: `POST /proxy/{tool_id}/external-recommender/predict`
+Request: CAS XMI + TypeSystem + metadata (layer, feature, anchoring, etc.).
+Response: Updated CAS XMI with predicted annotations where each matched text span is annotated and the target feature populated with an HPO IRI (`http://purl.obolibrary.org/obo/HP_XXXXXXX`). Score fields may be included if defined in the TypeSystem.
+Model loads lazily if not already loaded.
+
 ## Troubleshooting
 | Symptom | Check |
 |---------|-------|
 | Missing large files | Run `git lfs pull` |
-| Port conflict | Another process using 3000/8000/5432—stop it or edit compose mapping |
+| Port conflict | Another process using 3000/8000/8443/5432—stop it or edit compose mapping |
+| HTTPS warnings | Self-signed cert; accept locally or replace certs |
+| External recommender 422 | Ensure TypeSystem layer/feature names match tool expectations |
 
 ## Updating
 Pull latest + submodules + LFS:
