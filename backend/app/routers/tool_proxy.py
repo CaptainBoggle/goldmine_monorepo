@@ -74,7 +74,12 @@ async def batch_predict_with_tool(
     if not tool:
         raise HTTPException(status_code=404, detail=f"Tool '{tool_id}' not found")
 
-    return await _proxy_post_request(tool.endpoint, "/batch_predict", input_data.dict(), timeout=600.0)  # 10 minutes
+    return await _proxy_post_request(
+        tool.endpoint,
+        "/batch_predict",
+        input_data.dict(),
+        timeout=600.0,
+    )  # 10 minutes
 
 @router.post("/{tool_id}/external-recommender/predict")
 async def predict_with_external_recommender(
@@ -115,7 +120,10 @@ async def _proxy_get_request(base_url: str, endpoint: str, timeout: float = 60.0
 
 
 async def _proxy_post_request(
-    base_url: str, endpoint: str, data: Dict[str, Any], timeout: float = 30.0
+    base_url: str,
+    endpoint: str,
+    data: Dict[str, Any],
+    timeout: float = 30.0,
 ) -> Dict[str, Any]:
     """Make a POST request to a tool endpoint"""
     url = f"{base_url}{endpoint}"

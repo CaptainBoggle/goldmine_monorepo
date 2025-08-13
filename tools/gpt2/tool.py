@@ -56,6 +56,9 @@ class GPT2ModelImplementation(ModelInterface):
         return ToolInfo(
             name="GPT2 Placeholder",
             version="0.1.0",
-            description="Temporary GPT-2 model for development — to be replaced with fine-tuned PhenoGPT2",
+            description=(
+                "Temporary GPT-2 model for development — "
+                "to be replaced with fine-tuned PhenoGPT2"
+            ),
             author="T18A DATE Team",
         )

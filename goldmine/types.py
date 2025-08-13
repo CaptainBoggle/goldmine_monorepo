@@ -57,7 +57,9 @@ class ToolResponse(ToolOutput):
 
 
 class ToolBatchInput(SQLModel):
-    documents: List[List[str]] = Field(..., description="List of documents to be processed by the tool")
+    documents: List[List[str]] = Field(
+        ..., description="List of documents to be processed by the tool"
+    )
 
 
 class ToolBatchOutput(SQLModel):
@@ -337,7 +339,10 @@ class Prediction(SQLModel, table=True):
 
     db_id: Optional[int] = Field(default=None, primary_key=True, description="Database ID")
     document_id: Optional[int] = Field(
-        default=None, foreign_key="corpusdocument.db_id", description="Foreign key to document", index=True
+        default=None,
+        foreign_key="corpusdocument.db_id",
+        description="Foreign key to document",
+        index=True,
     )
 
     tool_name: str = Field(..., description="Name of the tool that made the prediction")

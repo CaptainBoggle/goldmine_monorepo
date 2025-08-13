@@ -51,7 +51,8 @@ class PhenoBertModelImplementation(ModelInterface):
 
         try:
             logger.info("Loading Stanza clinical NER model...")
-            self.clinical_ner_model = stanza.Pipeline('en', package='mimic', processors={'ner': 'i2b2'}, verbose=False)
+            self.clinical_ner_model = stanza.Pipeline('en', package='mimic',
+                                                      processors={'ner': 'i2b2'}, verbose=False)
 
             logger.info("Building HPO tree...")
             self.hpo_tree = HPOTree()
@@ -155,6 +156,9 @@ class PhenoBertModelImplementation(ModelInterface):
         return ToolInfo(
             name="PhenoBERT Phenotype Extractor",
             version="1.0.0",
-            description="PhenoBERT: A combined deep learning and NLP framework for clinical phenotype extraction",
+            description=(
+                "PhenoBERT: A combined deep learning and NLP framework for "
+                "clinical phenotype extraction"
+            ),
             author="Yuhao Feng, Lei Qi, Weidong Tian",
         )

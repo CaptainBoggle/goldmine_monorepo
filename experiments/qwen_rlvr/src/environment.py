@@ -40,11 +40,13 @@ def load_hpo_dataset(dataset_path: str = "externals/phenotypeCR_eval/Annotations
     df = pd.DataFrame(all_rows, columns=['question', 'answer'])
 
     dataset = Dataset.from_pandas(df)
-    prefix = "Extract the HPO keywords from this sentence. "\
-             "Do not extract negative examples, for example if it says \'patient does not have leukemia\', "\
-             "ignore the leukemia feature.\n\n"\
-             "Your final answer should be in the format [\'HP_XXXXXXX\', \'HP_XXXXXXX\', ...] "\
-             "such that it can be parsed by ast.literal_eval.\n\n"
+    prefix = (
+        "Extract the HPO keywords from this sentence. "
+        "Do not extract negated examples (e.g., 'patient does not have leukemia'), "
+        "ignore the leukemia feature.\n\n"
+        "Your final answer should be in the format ['HP_XXXXXXX', 'HP_XXXXXXX', ...] "
+        "such that it can be parsed by ast.literal_eval.\n\n"
+    )
     dataset = dataset.map(
         pad_prompt,
         fn_kwargs={"prefix": prefix, "suffix": ""}

@@ -102,7 +102,10 @@ class CorpusIngestionService:
 
         # Ensure the version isn't literally "latest" as that is a reserved keyword
         if version == "latest":
-            print(f"Corpus {corpus_name} has version 'latest', which is reserved! Skipping ingestion.")
+            print(
+                f"Corpus {corpus_name} has version 'latest', which is reserved! "
+                "Skipping ingestion."
+            )
             return False
 
         # Check if already ingested
@@ -118,7 +121,10 @@ class CorpusIngestionService:
             self.session.add(corpus)
             self.session.commit()
 
-            print(f"Successfully ingested corpus {corpus_name} version {version} with {len(corpus.entries)} documents")
+            print(
+                f"Successfully ingested corpus {corpus_name} version {version} "
+                f"with {len(corpus.entries)} documents"
+            )
             return True
 
         except Exception as e:

@@ -37,7 +37,10 @@ class GoldCorpusSmallParser(CorpusParser):
         return "2024-02-08" # from the corpus annotation guidelines
 
     def get_description(self) -> str:
-        return "Small gold standard corpus for phenotype concept recognition evaluation (testing subset)"
+        return (
+            "Small gold standard corpus for phenotype concept recognition evaluation "
+            "(testing subset)"
+        )
 
     def get_version(self) -> str:
         corpus_path = pathlib.Path(__file__).parent

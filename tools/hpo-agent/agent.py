@@ -137,11 +137,17 @@ class HPOEntry:
 
     def get_children(self) -> List[Dict[str, str]]:
         """Returns a list of children, including only their names and ids"""
-        return [{"id": child.id, "name": child.name} for child in self.term.children] if self.term.children else []
+        return (
+            [{"id": c.id, "name": c.name} for c in self.term.children]
+            if self.term.children else []
+        )
 
     def get_parents(self) -> List[Dict[str, str]]:
         """Returns a list of parents, including only their names and ids"""
-        return [{"id": parent.id, "name": parent.name} for parent in self.term.parents] if self.term.parents else []
+        return (
+            [{"id": p.id, "name": p.name} for p in self.term.parents]
+            if self.term.parents else []
+        )
 
     def to_dict(self) -> Dict[str, str | List[str] | int]:
         """Convert the HPOEntry to a dictionary representation."""
@@ -282,6 +288,7 @@ def build_index_exact_matches() -> Dict[str, Set[str]]:
     return index
 
 EXACT_MATCH_INDEX = build_index_exact_matches()
+
 def find_exact_matches(query: str) -> Optional[Set[str]]:
     """
     Find an exact match for a query in the HPO ontology.
@@ -399,11 +406,11 @@ def batch_search_hpo_candidates(queries: List[str], embedding_model) -> List[Lis
 
 # def get_hpo_entry(hpo_id: str) -> Dict:
 #     """
-#     Retrieves the full details of a single Human Phenotype Ontology (HPO) term using its unique ID.
-
+#     Retrieves the full details of a single Human Phenotype Ontology (HPO) term using its unique ID.  # noqa: E501
+#
 #     Args:
 #         hpo_id: The unique identifier for the HPO term (e.g., "HP:0001626").
-
+#
 #     Returns:
 #         A dictionary containing the detailed information of the HPO term.
 #     """
@@ -416,13 +423,13 @@ def batch_search_hpo_candidates(queries: List[str], embedding_model) -> List[Lis
 
 # def get_hpo_children(hpo_id: str) -> List[Dict[str, str]]:
 #     """
-#     Finds the direct children (more specific terms) of a given Human Phenotype Ontology (HPO) term.
-
+#     Finds the direct children (more specific terms) of a given Human Phenotype Ontology (HPO) term.  # noqa: E501
+#
 #     Args:
 #         hpo_id: The unique identifier for the parent HPO term (e.g., "HP:0001626").
-
+#
 #     Returns:
-#         A list of dictionaries, where each dictionary contains the 'id' and 'name' of a child term.
+#         A list of dictionaries, where each dictionary contains the 'id' and 'name' of a child term.  # noqa: E501
 #     """
 #     try:
 #         hpo_entry = HPOEntry(hpo_id)
@@ -434,12 +441,13 @@ def batch_search_hpo_candidates(queries: List[str], embedding_model) -> List[Lis
 # def get_hpo_parents(hpo_id: str) -> List[Dict[str, str]]:
 #     """
 #     Finds the direct parents (less specific terms) of a given Human Phenotype Ontology (HPO) term.
-
+#
 #     Args:
 #         hpo_id: The unique identifier for the child HPO term (e.g., "HP:0001627").
-
+#
 #     Returns:
-#         A list of dictionaries, where each dictionary contains the 'id' and 'name' of a parent term.
+#         A list of dictionaries, where each dictionary contains the
+#           'id' and 'name' of a parent term.
 #     """
 #     try:
 #         hpo_entry = HPOEntry(hpo_id)
@@ -474,7 +482,9 @@ def submit_annotations(
                     "sentence_index": sentence_idx
                 })
         else:
-            errors.append(f"Text span '{text_span}' not found as complete span within any single sentence")
+            errors.append(
+                f"Text span '{text_span}' not found as complete span within any single sentence"
+            )
 
     return {
         "validated_annotations": validated_annotations,
@@ -547,7 +557,7 @@ TOOLS: List[types.FunctionDeclaration] = [
     "required": ["queries"]
   }
 }),
-types.FunctionDeclaration(**{
+    types.FunctionDeclaration(**{
   "name": "search_hpo_candidates",
   "description": "Searches for Human Phenotype Ontology (HPO) term candidates based on a single descriptive query. Use this for targeted follow-up searches.",  # noqa: E501
   "parameters": {
@@ -555,7 +565,10 @@ types.FunctionDeclaration(**{
     "properties": {
       "query": {
         "type": "STRING",
-        "description": "A descriptive text query for a single HPO term (e.g., 'atrial septal defect')."
+        "description": (
+            "A descriptive text query for a single HPO term "
+            "(e.g., 'atrial septal defect')."
+        )
       },
       "top_k": {
         "type": "INTEGER",
@@ -565,9 +578,12 @@ types.FunctionDeclaration(**{
     "required": ["query"]
   }
 }),
-types.FunctionDeclaration(**{
+    types.FunctionDeclaration(**{
   "name": "submit_answer",
-  "description": "Submit your final, complete list of phenotype mappings for the entire document with validation.",
+  "description": (
+      "Submit your final, complete list of phenotype mappings for the "
+      "entire document with validation."
+  ),
   "parameters": {
     "type": "OBJECT",
     "properties": {
@@ -579,7 +595,11 @@ types.FunctionDeclaration(**{
           "properties": {
             "text_span": {
               "type": "STRING",
-              "description": "The exact text from a sentence that describes the phenotype. For discontinuous spans, connect the parts with ' -> ' (e.g., 'fingers -> short'). Must be entirely within a single sentence."  # noqa: E501
+              "description": (
+                  "The exact text from a sentence that describes the phenotype. For discontinuous "
+                  "spans, connect the parts with ' -> ' (e.g., 'fingers -> short'). "
+                  "Must be entirely within a single sentence."
+              )
             },
             "hpo_id": {
               "type": "STRING",
