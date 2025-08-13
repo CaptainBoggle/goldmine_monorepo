@@ -81,7 +81,7 @@ def create_app(model_implementation: ModelInterface):
             raise HTTPException(
                 status_code=500, detail=f"An unexpected error occurred during prediction: {str(e)}"
             )
-        
+
     @app.post("/batch_predict", response_model=ToolBatchResponse)
     async def batch_predict(input_data: ToolBatchInput) -> ToolBatchResponse:
         """

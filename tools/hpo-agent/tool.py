@@ -17,6 +17,7 @@ from google.genai import types
 from goldmine.toolkit.interface import ModelInterface
 from goldmine.types import PhenotypeMatch, ToolInfo, ToolInput, ToolOutput
 
+
 def normalize_text_for_matching(text: str) -> str:
     """
     Normalize text for span matching by removing whitespace characters like \r, \n, \t
@@ -24,14 +25,14 @@ def normalize_text_for_matching(text: str) -> str:
     """
     if not text:
         return ""
-    
+
     # Convert to lowercase
     text = text.lower()
-    
+
     # Remove all whitespace characters (spaces, tabs, newlines, carriage returns, etc.)
     # and replace with single spaces, then strip leading/trailing whitespace
     text = re.sub(r'\s+', ' ', text).strip()
-    
+
     return text
 
 # Configure logging
@@ -98,7 +99,7 @@ class HPOAgentModelImplementation(ModelInterface):
         for sentence, embedding in zip(test_sentences, embedded_sentences):
             logger.info(f"Embedded sentence: {sentence}")
             logger.info(f"Embedding: {embedding}")
-        
+
 
         self.gemini_config = types.GenerateContentConfig(
             temperature=0.5,
@@ -230,7 +231,7 @@ class HPOAgentModelImplementation(ModelInterface):
                         for func_call in function_calls:
                             logger.info(f"Executing function: {func_call.name}")
                             func_response = await self._execute_function_call(func_call, sentences)
-                            
+
                             # Log only summary of function response, not full details
                             result = func_response.get("result", {})
                             if func_call.name == "batch_search_hpo_candidates":
@@ -320,7 +321,7 @@ class HPOAgentModelImplementation(ModelInterface):
                 # We pass the sentences list that we have in scope
                 from agent import submit_annotations
                 validation_result = submit_annotations(mappings, sentences)
-                
+
                 # Check if there are errors - if so, don't mark as final
                 errors = validation_result.get("errors", "")
                 if errors and errors != "[]":  # If there are actual errors
@@ -389,19 +390,19 @@ class HPOAgentModelImplementation(ModelInterface):
         """Convert validated annotations to sentence-organized PhenotypeMatch objects."""
         # Initialize result with empty lists for each sentence
         sentence_matches = [[] for _ in sentences]
-        
+
         for annotation in validated_annotations:
             text_span = annotation.get("text_span", "")
             hpo_id = annotation.get("hpo_id", "")
             sentence_index = annotation.get("sentence_index", 0)
-            
+
             if text_span and hpo_id and 0 <= sentence_index < len(sentences):
                 match = PhenotypeMatch(
                     id=hpo_id,
                     match_text=text_span
                 )
                 sentence_matches[sentence_index].append(match)
-        
+
         return sentence_matches
 
     def _convert_to_phenotype_matches(

@@ -1,12 +1,13 @@
+import ast
+import glob
 import os
-from pathlib import Path
+
 import bioc
 import pandas as pd
-from datasets import Dataset, DatasetDict
-import glob
-import ast
 import verifiers as vf
+from datasets import Dataset, DatasetDict
 from verifiers.utils.data_utils import extract_boxed_answer
+
 
 def extract_hpo_ids(annotation):
     term_url = annotation.infons.get('HPOterm', '')
@@ -37,7 +38,7 @@ def load_hpo_dataset(dataset_path: str = "externals/phenotypeCR_eval/Annotations
         all_rows.extend(rows)
 
     df = pd.DataFrame(all_rows, columns=['question', 'answer'])
-    
+
     dataset = Dataset.from_pandas(df)
     prefix = "Extract the HPO keywords from this sentence. "\
              "Do not extract negative examples, for example if it says \'patient does not have leukemia\', "\
@@ -79,7 +80,7 @@ def get_hpo_environment():
             return 1.0 if not pred_ids else 0.0
 
         return len(pred_ids & actual_ids) / len(actual_ids)
-    
+
     rubric = vf.Rubric(
         funcs=[matches_reward_func, parser.get_format_reward_func()],
         weights=[1.0, 0.2],

@@ -20,7 +20,7 @@ class DatabaseService:
         """
         # Configure connection pooling to prevent timeout issues
         self.engine = create_engine(
-            database_url, 
+            database_url,
             echo=True,
             pool_size=10,  # Number of connections to maintain
             max_overflow=20,  # Additional connections that can be created

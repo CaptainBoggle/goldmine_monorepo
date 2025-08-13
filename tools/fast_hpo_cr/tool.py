@@ -1,10 +1,12 @@
 import asyncio
 import logging
+import unicodedata
+
+from FastHPOCR.HPOAnnotator import HPOAnnotator
 
 from goldmine.toolkit.interface import ModelInterface
 from goldmine.types import PhenotypeMatch, ToolInfo, ToolInput, ToolOutput
-from FastHPOCR.HPOAnnotator import HPOAnnotator
-import unicodedata
+
 logger = logging.getLogger(__name__)
 
 def normalize_unicode_to_ascii(text: str) -> str:

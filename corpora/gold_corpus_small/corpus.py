@@ -144,4 +144,4 @@ class GoldCorpusSmallParser(CorpusParser):
         )
 
 # Create the parser instance that will be imported by the corpus ingestion system
-parser = GoldCorpusSmallParser() 
+parser = GoldCorpusSmallParser()

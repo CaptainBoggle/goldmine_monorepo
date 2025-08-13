@@ -37,7 +37,10 @@ class TinyCorpusParser(CorpusParser):
         return "2024-02-08" # from the corpus annotation guidelines
 
     def get_description(self) -> str:
-        return "Tiny gold standard corpus for phenotype concept recognition evaluation (10 docs for fast testing)"
+        return (
+            "Tiny gold standard corpus for phenotype concept recognition evaluation "
+            "(10 docs for fast testing)"
+        )
 
     def get_version(self) -> str:
         corpus_path = pathlib.Path(__file__).parent
@@ -144,4 +147,4 @@ class TinyCorpusParser(CorpusParser):
         )
 
 # Create the parser instance that will be imported by the corpus ingestion system
-parser = TinyCorpusParser() 
+parser = TinyCorpusParser()

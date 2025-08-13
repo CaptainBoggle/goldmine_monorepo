@@ -1,8 +1,10 @@
 import logging
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from goldmine.toolkit.interface import ModelInterface
-from goldmine.types import PhenotypeMatch, ToolInput, ToolOutput, ToolInfo
+
 import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+from goldmine.toolkit.interface import ModelInterface
+from goldmine.types import PhenotypeMatch, ToolInfo, ToolInput, ToolOutput
 
 logger = logging.getLogger(__name__)
 

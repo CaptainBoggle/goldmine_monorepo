@@ -3,17 +3,16 @@ Tool prediction API endpoints.
 """
 
 from typing import List
+
+import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
 from goldmine.types import Corpus, CorpusDocument, Prediction, ToolDiscoveryInfo, ToolOutput
 
-from ..dependencies import get_tool_service
 from ..services.database import get_db_session
-from ..services.tool_service import ToolService
 from .corpora import get_corpus_dependency
 from .tools import get_tool_dependency
-import httpx
 
 router = APIRouter()
 
@@ -25,7 +24,7 @@ async def run_tool_on_corpus(
     session: Session = Depends(get_db_session),
 ):
     """Run a tool on all documents in a corpus and store the predictions."""
-    
+
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(f"{tool.endpoint}/status")
@@ -34,7 +33,10 @@ async def run_tool_on_corpus(
             if status.get("state") != "ready":
                 raise HTTPException(
                     status_code=503,
-                    detail=f"Model '{tool.id}' is not ready for predictions. Current state: {status.get('state')}",
+                    detail=(
+                        f"Model '{tool.id}' is not ready for predictions. "
+                        f"Current state: {status.get('state')}"
+                    ),
                 )
         except httpx.RequestError as e:
             raise HTTPException(
@@ -103,7 +105,12 @@ async def run_tool_on_corpus(
             detail=f"Error storing predictions: {str(e)}"
         )
 
-    return {"message": f"Successfully ran tool '{tool.id}' on corpus '{corpus.name}' and stored {len(documents)} predictions."}
+    return {
+        "message": (
+            f"Successfully ran tool '{tool.id}' on corpus '{corpus.name}' "
+            f"and stored {len(documents)} predictions."
+        )
+    }
 
 
 @router.get("/{tool_name}/{corpus_name}/{corpus_version}", response_model=List[Prediction])

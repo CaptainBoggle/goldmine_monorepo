@@ -1,13 +1,12 @@
-import asyncio
 import logging
+
+import tensorflow as tf
+from dic_ner import dic_ont
+from nn_model import bioTag_BERT, bioTag_CNN
+from tagging_text import bioTag
 
 from goldmine.toolkit.interface import ModelInterface
 from goldmine.types import PhenotypeMatch, ToolInfo, ToolInput, ToolOutput
-
-from nn_model import bioTag_CNN, bioTag_BERT
-from tagging_text import bioTag
-from dic_ner import dic_ont
-import tensorflow as tf
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +26,7 @@ class PhenoTaggerModelImplementation(ModelInterface):
         # TODO: Properly model_type functionality
         model_type = "biobert"
         if model_type =='cnn':
-            vocabfiles={'w2vfile':'externals/PhenoTagger_weights/bio_embedding_intrinsic.d200',   
+            vocabfiles={'w2vfile':'externals/PhenoTagger_weights/bio_embedding_intrinsic.d200',
                         'charfile':'externals/PhenoTagger/dict/char.vocab',
                         'labelfile':'externals/PhenoTagger/dict/lable.vocab',
                         'posfile':'externals/PhenoTagger/dict/pos.vocab'}
@@ -46,7 +45,7 @@ class PhenoTaggerModelImplementation(ModelInterface):
             vocabfiles={'labelfile':'externals/PhenoTagger/dict/lable.vocab',
                         'checkpoint_path':'externals/biobert-base-cased-v1.2/',
                         'lowercase':False}
-            modelfile='externals/PhenoTagger_weights/biobert_PT_v1.2.h5'  
+            modelfile='externals/PhenoTagger_weights/biobert_PT_v1.2.h5'
 
         if model_type == 'cnn':
             self.model = bioTag_CNN(vocabfiles)
@@ -58,7 +57,7 @@ class PhenoTaggerModelImplementation(ModelInterface):
 
     async def _unload_model(self):
         logger.info("Unloading PhenoTagger model...")
-        
+
         del self.model
         tf.keras.backend.clear_session()
 

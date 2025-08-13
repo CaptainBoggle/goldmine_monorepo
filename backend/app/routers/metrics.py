@@ -1,16 +1,16 @@
 from typing import List
+
 import evaluate
 import numpy as np
 from fastapi import APIRouter, Depends, HTTPException
+from sklearn.metrics import jaccard_score
 from sklearn.preprocessing import MultiLabelBinarizer
 from sqlmodel import Session, select
-from sklearn.metrics import jaccard_score
 
 from goldmine.types import (
     Corpus,
     EvaluationResult,
     Metric,
-    Prediction,
     ToolDiscoveryInfo,
 )
 
