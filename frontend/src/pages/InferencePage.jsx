@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ModelSelector, FileInput, TextInput, ActionButtons, ModelOutput, ModelActionOutput } from '../components';
 import HpoTermList from '../components/HpoTermList';
 import './InferencePage.css';
+import '../components/common-styles.css';
 
 function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading, result }) {
   const [input, setInput] = useState('The last child is a 6-year-old boy. At 36 weeks 3D ultrasonography showed telecanthus, short nose, long philtrum and short femur (Fig. 3A).');
@@ -70,8 +71,7 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
   return (
     <div className="inference-container">
       <div
-        className={matches.length > 0 && !loading ? 'inference-grid inference-grid-hpo' : 'inference-grid'}
-        style={{ justifyContent: matches.length > 0 && !loading ? 'start' : 'center', transition: 'justify-content 0.3s' }}
+        className={`inference-grid ${matches.length > 0 && !loading ? 'inference-grid-hpo grid-justify-start' : 'grid-justify-center'} grid-transition`}
       >
         {/* LEFT SIDE - Input Section */}
         <div className="inference-left">
@@ -150,8 +150,8 @@ function InferencePage({ tools, selectedTool, setSelectedTool, callApi, loading,
             {/* HPO Term List inside the Analysis Results card */}
             {hasRunAnalysis && matches.length > 0 && !loading && (
               <>
-                <hr style={{ margin: '2rem 0' }} />
-                <h3 className="inference-section-title" style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Identified HPO Terms</h3>
+                <hr className="divider" />
+                <h3 className="inference-section-title section-title-small">Identified HPO Terms</h3>
                 <HpoTermList matches={matches} />
               </>
             )}
