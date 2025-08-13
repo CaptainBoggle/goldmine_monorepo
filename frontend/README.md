@@ -4,6 +4,10 @@ Simple testing setup for the Goldmine frontend using Docker.
 
 ## 🚀 Quick Start
 
+### Coverage Result
+
+88.33% Function Coverage. Mostly affected by useEvaluationAPI.js and usePerformanceAPI.js as there are certain error cases we couldn't mock test on. Other than the two specific files, the coverage are all around 95%+ coverage.
+
 ### Run All Tests
 
 **All Tests:**
