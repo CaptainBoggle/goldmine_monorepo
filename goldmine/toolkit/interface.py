@@ -32,7 +32,7 @@ class ModelInterface(ABC):
         """
         Load the model into memory.
         """
-        pass
+        pass  # pragma: no cover
 
     @abstractmethod
     async def _unload_model(self):
@@ -40,7 +40,7 @@ class ModelInterface(ABC):
         Unload the model from memory.
 
         """
-        pass
+        pass  # pragma: no cover
 
     @abstractmethod
     async def _predict(self, input: ToolInput) -> ToolOutput:
@@ -48,7 +48,7 @@ class ModelInterface(ABC):
         Run prediction on a list of sentences.
         Should return a list of lists of PhenotypeMatch objects (one list per sentence).
         """
-        pass
+        pass  # pragma: no cover
 
     async def _batch_predict(self, input: ToolBatchInput) -> ToolBatchOutput:
         """
@@ -65,7 +65,7 @@ class ModelInterface(ABC):
         """
         Return information about this tool.
         """
-        pass
+        pass  # pragma: no cover
 
     # --- Standardised API methods below ---
 
@@ -74,7 +74,9 @@ class ModelInterface(ABC):
         Public method to load the model, used by the API layer.
         """
         if self.model_loaded:
-            return LoadResponse(state=self.state, message="Model already loaded", loading_time=0)
+            return LoadResponse(
+                state=self.state, message="Model already loaded", loading_time=0
+            )
         try:
             self.state = ToolState.LOADING
             start_time = time.time()
@@ -108,7 +110,9 @@ class ModelInterface(ABC):
             self.state = ToolState.UNLOADING
             await self._unload_model()
             self.state = ToolState.UNLOADED
-            return UnloadResponse(state=self.state, message="Model unloaded successfully")
+            return UnloadResponse(
+                state=self.state, message="Model unloaded successfully"
+            )
         except Exception as e:
             self.state = ToolState.ERROR
             self.error_message = str(e)
@@ -151,7 +155,9 @@ class ModelInterface(ABC):
         try:
             output = await self._batch_predict(input_data)
             processing_time = time.time() - start_time
-            return ToolBatchResponse(results=output.results, processing_time=processing_time)
+            return ToolBatchResponse(
+                results=output.results, processing_time=processing_time
+            )
         except Exception as e:
             self.state = ToolState.ERROR
             self.error_message = str(e)
