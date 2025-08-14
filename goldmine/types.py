@@ -11,7 +11,8 @@ from sqlmodel import Column, Field, Relationship, SQLModel
 class PhenotypeMatch(SQLModel):
     # HPO id
     id: str = Field(
-        ..., description="HPO ID of the phenotype (must be CURIE format, e.g., 'HP:0000001')"
+        ...,
+        description="HPO ID of the phenotype (must be CURIE format, e.g., 'HP:0000001')",
     )
 
     @field_validator("id")
@@ -36,7 +37,9 @@ class ToolState(str, Enum):
 class ToolInput(SQLModel):
     """Base class for tool input"""
 
-    sentences: List[str] = Field(..., description="List of sentences to be processed by the tool")
+    sentences: List[str] = Field(
+        ..., description="List of sentences to be processed by the tool"
+    )
     # TODO: do we bother with parameters?
     # parameters: Dict[str, Any] = Field(
     #     default_factory=dict, description="Additional parameters for the tool"
@@ -107,7 +110,9 @@ class ToolStatus(SQLModel):
 class LoadResponse(SQLModel):
     """Response from model load operation"""
 
-    state: ToolState = Field(..., description="Current state of the tool after load request")
+    state: ToolState = Field(
+        ..., description="Current state of the tool after load request"
+    )
     loading_time: float = Field(0, description="Time taken to load in seconds")
     message: Optional[str] = Field(
         None,
@@ -118,7 +123,9 @@ class LoadResponse(SQLModel):
 class UnloadResponse(SQLModel):
     """Response from model unload operation"""
 
-    state: ToolState = Field(..., description="Current state of the tool after unload request")
+    state: ToolState = Field(
+        ..., description="Current state of the tool after unload request"
+    )
     message: Optional[str] = Field(
         None,
         description="Optional message providing additional information about the unload operation",
@@ -147,7 +154,9 @@ class ExternalRecommenderDocument(ExternalRecommenderModel):
     document_id: Optional[int] = BaseField(
         None, alias="documentId", description="Identifier for this document"
     )
-    user_id: Optional[str] = BaseField(None, alias="userId", description="Identifier for the user")
+    user_id: Optional[str] = BaseField(
+        None, alias="userId", description="Identifier for the user"
+    )
     xmi: Optional[str] = BaseField(None, description="CAS as XMI")
 
 
@@ -158,13 +167,19 @@ class ExternalRecommenderMetadata(ExternalRecommenderModel):
     """
 
     layer: str = BaseField(..., description="Layer which should be predicted")
-    feature: str = BaseField(..., description="Feature of the layer which should be predicted")
-    project_id: int = BaseField(..., alias="projectId", description="The id of the project")
+    feature: str = BaseField(
+        ..., description="Feature of the layer which should be predicted"
+    )
+    project_id: int = BaseField(
+        ..., alias="projectId", description="The id of the project"
+    )
     anchoring_mode: str = BaseField(
         ..., alias="anchoringMode", description="How annotations are anchored to tokens"
     )
     cross_sentence: bool = BaseField(
-        ..., alias="crossSentence", description="True if cross-sentence annotations are supported"
+        ...,
+        alias="crossSentence",
+        description="True if cross-sentence annotations are supported",
     )
 
 
@@ -174,11 +189,15 @@ class ExternalRecommenderPredictRequest(ExternalRecommenderModel):
     https://inception-project.github.io/releases/37.1/docs/developer-guide.html#_external_recommender_api_predictrequest
     """
 
-    document: ExternalRecommenderDocument = BaseField(..., description="Document to predict")
+    document: ExternalRecommenderDocument = BaseField(
+        ..., description="Document to predict"
+    )
     request_metadata: ExternalRecommenderMetadata = BaseField(
         ..., alias="metadata", description="Metadata for prediction"
     )
-    type_system: str = BaseField(..., alias="typeSystem", description="Type system XML of the CAS")
+    type_system: str = BaseField(
+        ..., alias="typeSystem", description="Type system XML of the CAS"
+    )
 
 
 class ExternalRecommenderPredictResponse(ExternalRecommenderModel):
@@ -211,9 +230,14 @@ class CorpusDocument(SQLModel, table=True):
     # each entry contains an input and output object
 
     # Database fields
-    db_id: Optional[int] = Field(default=None, primary_key=True, description="Database ID")
+    db_id: Optional[int] = Field(
+        default=None, primary_key=True, description="Database ID"
+    )
     corpus_id: Optional[int] = Field(
-        default=None, foreign_key="corpus.db_id", description="Foreign key to corpus", index=True
+        default=None,
+        foreign_key="corpus.db_id",
+        description="Foreign key to corpus",
+        index=True,
     )
 
     name: str = Field(..., description="Name of the document", index=True)
@@ -234,7 +258,9 @@ class CorpusDocument(SQLModel, table=True):
     )
 
     corpus: Optional["Corpus"] = Relationship(back_populates="entries")
-    predictions: List["Prediction"] = Relationship(back_populates="document", cascade_delete=True)
+    predictions: List["Prediction"] = Relationship(
+        back_populates="document", cascade_delete=True
+    )
 
     def __init__(
         self,
@@ -297,7 +323,9 @@ class CorpusDocument(SQLModel, table=True):
         # Convert dict back to PhenotypeMatch objects
         results = []
         for sentence_results in self.output_internal.get("results", []):
-            sentence_matches = [PhenotypeMatch.model_validate(match) for match in sentence_results]
+            sentence_matches = [
+                PhenotypeMatch.model_validate(match) for match in sentence_results
+            ]
             results.append(sentence_matches)
         return ToolOutput(results=results)
 
@@ -315,23 +343,31 @@ class CorpusDocument(SQLModel, table=True):
     @property
     def annotation_count(self) -> int:
         """Get the number of annotations in this document"""
-        return sum(len(sentence_annotations) for sentence_annotations in self.output.results)
+        return sum(
+            len(sentence_annotations) for sentence_annotations in self.output.results
+        )
 
 
 class Corpus(SQLModel, table=True):
     """Base class for a corpus"""
 
-    db_id: Optional[int] = Field(default=None, primary_key=True, description="Database ID")
+    db_id: Optional[int] = Field(
+        default=None, primary_key=True, description="Database ID"
+    )
 
     name: str = Field(..., description="Name of the corpus", index=True)
     description: Optional[str] = Field(None, description="Description of the corpus")
     # TODO: enforce format of hpo_version?
     hpo_version: str = Field(..., description="Version of the HPO ontology used")
     corpus_version: str = Field(
-        "1.0", description="Version of the corpus format, for future compatibility", index=True
+        "1.0",
+        description="Version of the corpus format, for future compatibility",
+        index=True,
     )
 
-    entries: List[CorpusDocument] = Relationship(back_populates="corpus", cascade_delete=True)
+    entries: List[CorpusDocument] = Relationship(
+        back_populates="corpus", cascade_delete=True
+    )
 
     # auto generated field to track number of documents
     @computed_field
@@ -350,7 +386,9 @@ class Corpus(SQLModel, table=True):
 class Prediction(SQLModel, table=True):
     """A prediction made by a tool on a document."""
 
-    db_id: Optional[int] = Field(default=None, primary_key=True, description="Database ID")
+    db_id: Optional[int] = Field(
+        default=None, primary_key=True, description="Database ID"
+    )
     document_id: Optional[int] = Field(
         default=None,
         foreign_key="corpusdocument.db_id",
@@ -359,7 +397,9 @@ class Prediction(SQLModel, table=True):
     )
 
     tool_name: str = Field(..., description="Name of the tool that made the prediction")
-    tool_version: str = Field(..., description="Version of the tool that made the prediction")
+    tool_version: str = Field(
+        ..., description="Version of the tool that made the prediction"
+    )
 
     # Store the complex objects as JSON in the database
     output_internal: dict = Field(
@@ -412,7 +452,9 @@ class Prediction(SQLModel, table=True):
         # Convert dict back to PhenotypeMatch objects
         results = []
         for sentence_results in self.output_internal.get("results", []):
-            sentence_matches = [PhenotypeMatch.model_validate(match) for match in sentence_results]
+            sentence_matches = [
+                PhenotypeMatch.model_validate(match) for match in sentence_results
+            ]
             results.append(sentence_matches)
         return ToolOutput(results=results)
 

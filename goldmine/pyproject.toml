@@ -14,3 +14,9 @@ dependencies = [
 dev = [
     "ruff>=0.1.0"
 ]
+test = [
+    "pytest",
+    "pytest-cov",
+]
+
+[tool.ruff]
