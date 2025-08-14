@@ -53,7 +53,8 @@ def create_app(model_implementation: ModelInterface):
             raise e
         except Exception as e:
             raise HTTPException(
-                status_code=500, detail=f"An unexpected error occurred during loading: {str(e)}"
+                status_code=500,
+                detail=f"An unexpected error occurred during loading: {str(e)}",
             )
 
     @app.post("/unload")
@@ -63,7 +64,8 @@ def create_app(model_implementation: ModelInterface):
             return await model_implementation.unload()
         except Exception as e:
             raise HTTPException(
-                status_code=500, detail=f"An unexpected error occurred during unloading: {str(e)}"
+                status_code=500,
+                detail=f"An unexpected error occurred during unloading: {str(e)}",
             )
 
     @app.post("/predict", response_model=ToolResponse)
@@ -79,7 +81,8 @@ def create_app(model_implementation: ModelInterface):
             raise e
         except Exception as e:
             raise HTTPException(
-                status_code=500, detail=f"An unexpected error occurred during prediction: {str(e)}"
+                status_code=500,
+                detail=f"An unexpected error occurred during prediction: {str(e)}",
             )
 
     @app.post("/batch_predict", response_model=ToolBatchResponse)
@@ -95,7 +98,8 @@ def create_app(model_implementation: ModelInterface):
             raise e
         except Exception as e:
             raise HTTPException(
-                status_code=500, detail=f"An unexpected error occurred during prediction: {str(e)}"
+                status_code=500,
+                detail=f"An unexpected error occurred during prediction: {str(e)}",
             )
 
     @app.post("/external-recommender/predict")
@@ -113,11 +117,13 @@ def create_app(model_implementation: ModelInterface):
             await model_implementation.load()
 
         try:
-            print("Received request:", request)  # debugging
-            print("Request metadata:", request.request_metadata)  # debuggin
+            # print("Received request:", request)  # debugging
+            # print("Request metadata:", request.request_metadata)  # debuggin
 
             # Load type system and CAS
-            typesystem = load_typesystem(io.BytesIO(request.type_system.encode("utf-8")))
+            typesystem = load_typesystem(
+                io.BytesIO(request.type_system.encode("utf-8"))
+            )
             cas = load_cas_from_xmi(
                 io.BytesIO(request.document.xmi.encode("utf-8")), typesystem=typesystem
             )
@@ -135,6 +141,7 @@ def create_app(model_implementation: ModelInterface):
             tool_output = await model_implementation.predict(tool_input)
             model_name = model_implementation.get_info().name
             for match in tool_output.results[0]:
+                print(f"Processing match: {match.id} - {match.match_text}")
                 match_text = match.match_text or ""
 
                 # Match all occurrences of the match_text
@@ -151,6 +158,7 @@ def create_app(model_implementation: ModelInterface):
                             "inception_internal_predicted": True,
                         },
                     )
+                    print(f"Adding annotation: {annotation}")
                     cas.add(annotation)
 
             annotated_xmi = cas.to_xmi()

@@ -18,17 +18,17 @@ class CorpusParser(ABC):
     @abstractmethod
     def get_hpo_version(self) -> str:
         """Return the HPO version used by this corpus."""
-        pass
+        pass  # pragma: no cover
 
     @abstractmethod
     def get_description(self) -> str:
         """Return a description of this corpus."""
-        pass
+        pass  # pragma: no cover
 
     @abstractmethod
     def get_version(self) -> str:
         """Return the version of this corpus parser and data."""
-        pass
+        pass  # pragma: no cover
 
     @abstractmethod
     def parse_corpus(self, corpus_path: Path) -> List[CorpusDocument]:
@@ -41,7 +41,7 @@ class CorpusParser(ABC):
         Returns:
             List of CorpusDocument objects in the standard goldmine format
         """
-        pass
+        pass  # pragma: no cover
 
     def create_corpus(self, corpus_path: Path) -> Corpus:
         """
