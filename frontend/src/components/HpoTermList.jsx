@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import './common-styles.css';
+import { fetchHpoDetails, getUniqueMatches } from '../utils/hpoUtils';
 
 function HpoTermList({ matches }) {
   // Remove duplicate HPO IDs
-  const uniqueMatches = Array.from(
-    matches.reduce((map, m) => map.set(m.id, m), new Map()).values()
-  );
+  const uniqueMatches = getUniqueMatches(matches);
 
   // State for HPO details cache
   const [hpoDetails, setHpoDetails] = useState({});
@@ -16,15 +16,8 @@ function HpoTermList({ matches }) {
     if (hpoDetails[id] || fetching[id]) return;
     setFetching(f => ({ ...f, [id]: true }));
     try {
-      const res = await fetch(`https://ontology.jax.org/api/hp/terms/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setHpoDetails(prev => ({ ...prev, [id]: { ...data, valid: true } }));
-      } else {
-        setHpoDetails(prev => ({ ...prev, [id]: { valid: false } }));
-      }
-    } catch {
-      setHpoDetails(prev => ({ ...prev, [id]: { valid: false } }));
+      const details = await fetchHpoDetails(id);
+      setHpoDetails(prev => ({ ...prev, [id]: details }));
     } finally {
       setFetching(f => ({ ...f, [id]: false }));
     }
@@ -37,11 +30,10 @@ function HpoTermList({ matches }) {
     uniqueIds.forEach(id => {
       fetchHpo(id);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(uniqueMatches)]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div className="flex-column flex-gap-12">
       {uniqueMatches.map((m, idx) => {
         const details = hpoDetails[m.id];
         const isValid = details?.valid;
@@ -49,33 +41,11 @@ function HpoTermList({ matches }) {
         return (
           <div
             key={`${m.id}-${idx}`}
-            style={{
-              background: '#fff',
-              border: '1.5px solid #ccc',
-              borderRadius: 8,
-              padding: '12px 14px',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-              fontSize: 14,
-              color: '#222',
-              minWidth: 0,
-              transition: 'box-shadow 0.2s, border 0.2s',
-            }}
+            className="hpo-term"
           >
             {/* HPO term name as clickable, fallback to ID if not loaded */}
             <button
-              style={{
-                fontWeight: 'bold',
-                color: '#111',
-                fontSize: 17,
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-                marginBottom: 6,
-                textDecoration: 'none',
-                width: '100%',
-                textAlign: 'left',
-              }}
+              className="hpo-term-button"
               onClick={() => setOpenIdx(expanded ? null : idx)}
               disabled={fetching[m.id]}
               aria-expanded={expanded}
@@ -85,7 +55,7 @@ function HpoTermList({ matches }) {
                 : (
                   <>
                     {details?.name || m.id}
-                    <span style={{ color: '#888', fontWeight: 'normal', fontSize: 15, marginLeft: 8 }}>
+                    <span className="text-secondary ml-8" style={{ fontWeight: 'normal', fontSize: 15 }}>
                       {details?.id ? `(${details.id})` : `(${m.id})`}
                     </span>
                   </>
@@ -93,27 +63,27 @@ function HpoTermList({ matches }) {
             </button>
             {/* Expand details below the button if expanded */}
             {expanded && (
-              <div style={{ marginTop: 10 }}>
+              <div className="mt-1">
                 {fetching[m.id] ? (
-                  <div style={{ textAlign: 'center', color: '#888', fontSize: 16 }}>Loading...</div>
+                  <div className="loading-text">Loading...</div>
                 ) : isValid === true ? (
                   <>
-                    <div style={{ color: '#888', fontSize: 13, marginBottom: 2 }}> {details.definition}</div>
+                    <div className="text-secondary mb-1"> {details.definition}</div>
                     {details.synonyms && details.synonyms.length > 0 && (
-                      <div style={{ color: '#888', fontSize: 13 }}>
-                        <span style={{ color: '#444', fontWeight: 'bold', fontSize: 14 }}>Synonym:</span>
-                        <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      <div className="text-secondary">
+                        <span className="font-bold" style={{ color: '#444', fontSize: 14 }}>Synonym:</span>
+                        <div className="flex-wrap flex-gap-4" style={{ marginTop: 4 }}>
                           {details.synonyms.map((syn, sidx) => (
-                            <span key={sidx} style={{ background: '#eee', color: '#555', borderRadius: 4, padding: '2px 6px', fontSize: 12, marginRight: 4, marginBottom: 2, display: 'inline-block' }}>{syn}</span>
+                            <span key={sidx} className="hpo-synonym-tag">{syn}</span>
                           ))}
                         </div>
                       </div>
                     )}
                   </>
                 ) : isValid === false ? (
-                  <span style={{ color: '#f87171' }}>Invalid HPO ID</span>
+                  <span className="error-text">Invalid HPO ID</span>
                 ) : (
-                  <div style={{ textAlign: 'center', color: '#888', fontSize: 16 }}>Loading...</div>
+                  <div className="loading-text">Loading...</div>
                 )}
               </div>
             )}

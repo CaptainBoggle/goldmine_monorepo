@@ -1,5 +1,4 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { render } from '@testing-library/react';
 import { useEvaluationAPI, useEvaluationPreload } from '../useEvaluationAPI';
 import { EvaluationProvider } from '../../contexts/EvaluationContext';
 

@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import './FileInput.css';
+import './common-styles.css';
 
 function FileInput({ onFileSelect }) {
   const [selectedFileName, setSelectedFileName] = useState('');
@@ -60,7 +61,7 @@ function FileInput({ onFileSelect }) {
           type="file"
           accept=".txt,text/plain"
           onChange={handleFileSelect}
-          style={{ display: 'none' }}
+          className="hidden"
         />
         {selectedFileName ? (
           <button 

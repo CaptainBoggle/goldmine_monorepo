@@ -7,7 +7,7 @@ export function usePerformanceAPI() {
   const [selectedTool, setSelectedTool] = useState('');
   const [selectedCorpus, setSelectedCorpus] = useState('');
   const [selectedCorpusVersion, setSelectedCorpusVersion] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [isPredicting, setIsPredicting] = useState(false);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [metrics, setMetrics] = useState(null);
@@ -184,7 +184,6 @@ export function usePerformanceAPI() {
     startLoading(); // Prevent navigation during prediction
 
     try {
-      // Check if predictions already exist
       const predictionsExist = await checkExistingPredictions();
       
       if (predictionsExist) {
@@ -265,7 +264,6 @@ export function usePerformanceAPI() {
     startLoading(); // Prevent navigation during evaluation
 
     try {
-      // Check if metrics already exist
       const existingMetrics = await checkExistingMetrics();
       
       if (existingMetrics) {

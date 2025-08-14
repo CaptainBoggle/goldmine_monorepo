@@ -1,14 +1,13 @@
 import { Navigation } from './components';
 import { InferencePage, PerformancePage, AboutPage, EvaluationPage } from './pages';
 import { useTools, useApiCall, useNavigation, useEvaluationPreload } from './hooks';
-import { LoadingProvider, useLoading } from './contexts/LoadingContext';
+import { LoadingProvider } from './contexts/LoadingContext';
 import { EvaluationProvider } from './contexts/EvaluationContext';
 
 function AppContent() {
   const { tools, selectedTool, setSelectedTool, error: toolsError, fetchTools } = useTools();
   const { loading, result, error: apiError, callApi } = useApiCall();
   const { activeTab, setActiveTab } = useNavigation();
-  const { isGlobalLoading } = useLoading();
   
   // Preload evaluation data
   const evaluationData = useEvaluationPreload();

@@ -1,0 +1,362 @@
+/* Common styles extracted from inline styles across components */
+
+/* Color constants */
+:root {
+  --color-success: #10b981;
+  --color-error: #f87171;
+  --color-warning: #f59e0b;
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
+  --color-text-primary: #374151;
+  --color-text-secondary: #6b7280;
+  --color-text-light: #888;
+  --color-border: #d1d5db;
+  --color-background-light: #f9fafb;
+  --color-background-white: #fff;
+  --color-background-green-light: #d1fae5;
+  --color-background-red-light: #fee2e2;
+  --color-background-yellow-light: #fef3c7;
+  --color-outline-green: #059669;
+  --color-outline-red: #dc2626;
+  --color-outline-orange: #f59e42;
+}
+
+/* Common button styles */
+.btn-primary {
+  padding: 0.5rem 1rem;
+  background-color: var(--color-success);
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #059669;
+}
+
+.btn-primary:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Common select styles */
+.select-common {
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  min-width: 200px;
+}
+
+/* Common label styles */
+.label-common {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+/* Common text styles */
+.text-secondary {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.text-light {
+  color: var(--color-text-light);
+}
+
+/* Common card styles */
+.card-common {
+  background: var(--color-background-white);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+/* HPO term styles */
+.hpo-term {
+  background: var(--color-background-white);
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  font-size: 14px;
+  color: #222;
+  min-width: 0;
+  transition: box-shadow 0.2s, border 0.2s;
+}
+
+.hpo-term-button {
+  font-weight: bold;
+  color: #111;
+  font-size: 17px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 6px;
+  text-decoration: none;
+  width: 100%;
+  text-align: left;
+}
+
+.hpo-synonym-tag {
+  background: #eee;
+  color: #555;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  margin-right: 4px;
+  margin-bottom: 2px;
+  display: inline-block;
+}
+
+/* Performance metrics highlighting */
+.metric-best {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.metric-normal {
+  color: var(--color-text-primary);
+  font-weight: 400;
+}
+
+/* Loading states */
+.loading-text {
+  color: var(--color-text-light);
+  text-align: center;
+  font-size: 16px;
+}
+
+/* Error states */
+.error-text {
+  color: var(--color-error);
+}
+
+/* Tooltip styles */
+.tooltip-content {
+  background: var(--color-background-white);
+  color: #222;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+/* Annotated text styles */
+.annotated-text-valid {
+  background: var(--color-background-green-light);
+  border: 2px solid var(--color-outline-green);
+  border-radius: 4px;
+  padding: 0 2px;
+  cursor: pointer;
+  transition: background 0.2s, border 0.2s;
+  box-sizing: border-box;
+}
+
+.annotated-text-invalid {
+  background: var(--color-background-red-light);
+  border: 2px solid var(--color-outline-red);
+  border-radius: 4px;
+  padding: 0 2px;
+  cursor: pointer;
+  transition: background 0.2s, border 0.2s;
+  box-sizing: border-box;
+}
+
+.annotated-text-loading {
+  background: var(--color-background-yellow-light);
+  border: 2px solid var(--color-outline-orange);
+  border-radius: 4px;
+  padding: 0 2px;
+  cursor: pointer;
+  transition: background 0.2s, border 0.2s;
+  box-sizing: border-box;
+}
+
+/* Additional common styles for remaining inline styles */
+
+/* Layout utilities */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-wrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.flex-gap-1 {
+  gap: 1rem;
+}
+
+.flex-gap-2 {
+  gap: 2rem;
+}
+
+.flex-gap-4 {
+  gap: 4px;
+}
+
+.flex-gap-12 {
+  gap: 12px;
+}
+
+.flex-gap-16 {
+  gap: 16px;
+}
+
+/* Spacing utilities */
+.mb-0 {
+  margin-bottom: 0;
+}
+
+.mb-1 {
+  margin-bottom: 1rem;
+}
+
+.mb-2 {
+  margin-bottom: 2rem;
+}
+
+.mt-1 {
+  margin-top: 1rem;
+}
+
+.mt-2 {
+  margin-top: 2rem;
+}
+
+.ml-8 {
+  margin-left: 8px;
+}
+
+/* Text utilities */
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.text-lg {
+  font-size: 1.1rem;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-bold {
+  font-weight: bold;
+}
+
+/* SVG and chart styles */
+.chart-container {
+  background: var(--color-background-light);
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+
+/* Form elements */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.form-select {
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  min-width: 200px;
+}
+
+.form-select-small {
+  min-width: 150px;
+}
+
+/* Hidden elements */
+.hidden {
+  display: none;
+}
+
+/* Text formatting */
+.pre-wrap {
+  white-space: pre-wrap;
+}
+
+/* Divider */
+.divider {
+  margin: 2rem 0;
+}
+
+/* Section title variants */
+.section-title-small {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+/* Checkbox container */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 15px;
+}
+
+/* Status text */
+.status-text {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+/* Loading and empty states */
+.loading-state {
+  color: var(--color-text-light);
+  margin: 1rem 0;
+}
+
+.empty-state {
+  color: var(--color-text-light);
+  margin: 2rem 0;
+}
+
+.empty-state-small {
+  color: var(--color-text-light);
+  margin: 1rem 0;
+}
+
+/* Dynamic grid justification */
+.grid-justify-start {
+  justify-content: start;
+}
+
+.grid-justify-center {
+  justify-content: center;
+}
+
+.grid-transition {
+  transition: justify-content 0.3s;
+}

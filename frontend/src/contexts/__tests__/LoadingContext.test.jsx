@@ -23,7 +23,6 @@ function TestComponent() {
 
 // Test component that uses the hook outside provider (for error testing)
 function TestComponentOutsideProvider() {
-  const loading = useLoading();
   return <div>Should not render</div>;
 }
 

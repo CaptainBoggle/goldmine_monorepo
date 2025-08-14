@@ -15,7 +15,6 @@ function PerformancePage() {
     selectedTool,
     selectedCorpus,
     selectedCorpusVersion,
-    isLoading,
     isPredicting,
     isEvaluating,
     metrics,

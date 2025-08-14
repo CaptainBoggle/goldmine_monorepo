@@ -1,17 +1,13 @@
 import './ModelOutput.css';
+import './common-styles.css';
 import React, { useState, useCallback, useEffect } from 'react';
 import Tooltip from '@mui/material/Tooltip';
 import CircularProgress from '@mui/material/CircularProgress';
+import { parseResultAndMatches, fetchHpoDetails, getAnnotatedTextClass } from '../utils/hpoUtils';
 
 function ModelOutput({ loading, result, originalText, hasRunAnalysis }) {
-  // Parse result JSON
-  let parsedResult = null;
-  try {
-    parsedResult = typeof result === 'string' ? JSON.parse(result) : result;
-  } catch (e) {}
-
-  // Extract matches from all sentences
-  const matches = (parsedResult?.results || []).flat();
+  // Parse result JSON and extract matches
+  const { parsedResult, matches } = parseResultAndMatches(result);
 
   // State for HPO details cache
   const [hpoDetails, setHpoDetails] = useState({});
@@ -22,15 +18,8 @@ function ModelOutput({ loading, result, originalText, hasRunAnalysis }) {
     if (hpoDetails[id] || fetching[id]) return;
     setFetching(f => ({ ...f, [id]: true }));
     try {
-      const res = await fetch(`https://ontology.jax.org/api/hp/terms/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setHpoDetails(prev => ({ ...prev, [id]: { ...data, valid: true } }));
-      } else {
-        setHpoDetails(prev => ({ ...prev, [id]: { valid: false } }));
-      }
-    } catch {
-      setHpoDetails(prev => ({ ...prev, [id]: { valid: false } }));
+      const details = await fetchHpoDetails(id);
+      setHpoDetails(prev => ({ ...prev, [id]: details }));
     } finally {
       setFetching(f => ({ ...f, [id]: false }));
     }
@@ -43,7 +32,6 @@ function ModelOutput({ loading, result, originalText, hasRunAnalysis }) {
     uniqueIds.forEach(id => {
       fetchHpo(id);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(matches)]);
 
   // Annotate text with spans for each match
@@ -81,22 +69,9 @@ function ModelOutput({ loading, result, originalText, hasRunAnalysis }) {
       const { match_text, id } = token;
       const details = hpoDetails[id];
       const isValid = details?.valid;
-      let color = '#facc15'; // orange while loading
-      if (!fetching[id]) {
-        color = isValid === true ? '#4ade80' : '#f87171';
-      }
-      // Set lighter background and darker outline for each color
-      let bgColor = '#fef3c7'; // light orange
-      let outlineColor = '#f59e42'; // darker orange
-      if (!fetching[id]) {
-        if (isValid === true) {
-          bgColor = '#d1fae5'; // light green
-          outlineColor = '#059669'; // dark green
-        } else {
-          bgColor = '#fee2e2'; // light red
-          outlineColor = '#dc2626'; // dark red
-        }
-      }
+      // Determine CSS class based on validation state
+      const annotatedClass = getAnnotatedTextClass(fetching[id], isValid);
+      
       return (
         <Tooltip
           key={i}
@@ -104,53 +79,31 @@ function ModelOutput({ loading, result, originalText, hasRunAnalysis }) {
             fetching[id] ? (
               <CircularProgress size={20} />
             ) : isValid === true ? (
-              <div>
-                <div style={{ color: '#888', fontSize: 13, marginBottom: 2 }}>{details.id}</div>
-                <div style={{ fontWeight: 'bold', color: '#111', fontSize: 18, marginBottom: 6 }}>{details.name}</div>
-                <div style={{ color: '#888', fontSize: 13, marginBottom: 2 }}> {details.definition}</div>
+              <div className="tooltip-content">
+                <div className="text-secondary mb-1">{details.id}</div>
+                <div className="font-bold" style={{ color: '#111', fontSize: 18, marginBottom: 6 }}>{details.name}</div>
+                <div className="text-secondary mb-1"> {details.definition}</div>
                 {details.synonyms && details.synonyms.length > 0 && (
-                  <div style={{ color: '#888', fontSize: 13 }}>
-                    <span style={{ color: '#444', fontWeight: 'bold', fontSize: 14 }}>Synonym:</span>
-                    <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  <div className="text-secondary">
+                    <span className="font-bold" style={{ color: '#444', fontSize: 14 }}>Synonym:</span>
+                    <div className="flex-wrap flex-gap-4" style={{ marginTop: 4 }}>
                       {details.synonyms.map((syn, idx) => (
-                        <span key={idx} style={{ background: '#eee', color: '#555', borderRadius: 4, padding: '2px 6px', fontSize: 12, marginRight: 4, marginBottom: 2, display: 'inline-block' }}>{syn}</span>
+                        <span key={idx} className="hpo-synonym-tag">{syn}</span>
                       ))}
                     </div>
                   </div>
                 )}
               </div>
             ) : isValid === false ? (
-              <span style={{ color: '#f87171' }}>Invalid HPO ID</span>
+              <span className="error-text">Invalid HPO ID</span>
             ) : (
               'Loading...'
             )
           }
           arrow
           placement="top"
-          componentsProps={{
-            tooltip: {
-              style: {
-                background: '#fff',
-                color: '#222',
-                border: '1px solid #ccc',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                borderRadius: 6,
-                padding: 12,
-              },
-            },
-          }}
         >
-          <span
-            style={{
-              background: bgColor,
-              border: `2px solid ${outlineColor}`,
-              borderRadius: 4,
-              padding: '0 2px',
-              cursor: 'pointer',
-              transition: 'background 0.2s, border 0.2s',
-              boxSizing: 'border-box',
-            }}
-          >
+          <span className={annotatedClass}>
             {match_text}
           </span>
         </Tooltip>
@@ -164,11 +117,10 @@ function ModelOutput({ loading, result, originalText, hasRunAnalysis }) {
   } else if (hasRunAnalysis && result && parsedResult && originalText && matches.length > 0) {
     // Show annotated text with hoverable terms
     const annotated = annotateText(originalText, matches);
-    content = <div className="model-output-result" style={{ whiteSpace: 'pre-wrap' }}>{renderAnnotated(annotated)}</div>;
+    content = <div className="model-output-result pre-wrap">{renderAnnotated(annotated)}</div>;
   } else if (hasRunAnalysis && result && parsedResult && originalText && matches.length === 0 && parsedResult.results) {
     // Show original text if we have a valid prediction result but no matches
-    // Only show this if parsedResult.results exists (indicating it's a prediction response)
-    content = <div className="model-output-result" style={{ whiteSpace: 'pre-wrap' }}>{originalText}</div>;
+    content = <div className="model-output-result pre-wrap">{originalText}</div>;
   } else {
     // Don't show anything for non-prediction results (model actions) or when no analysis has been run
     content = null;
