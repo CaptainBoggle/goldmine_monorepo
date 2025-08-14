@@ -771,4 +771,576 @@ describe('useEvaluationAPI Integration Tests', () => {
       expect(true).toBe(true);
     });
   });
+
+  describe('Complex Refresh Logic Integration', () => {
+    it('handles complete refresh workflow with predictions and metrics', async () => {
+      const mockTools = [
+        { id: 'phenotagger', name: 'PhenoTagger' },
+        { id: 'phenobert', name: 'PhenoBERT' }
+      ];
+      const mockCorpora = [
+        { name: 'gold_corpus', corpus_version: 'v1.0' }
+      ];
+      const mockPredictions = [{ id: 1, result: 'prediction' }];
+      const mockMetrics = [
+        {
+          evaluation_result: {
+            accuracy: 0.85,
+            precision: 0.82,
+            recall: 0.88,
+            f1: 0.85
+          }
+        }
+      ];
+
+      // Mock the complete workflow: tools -> corpora -> predictions -> metrics
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockTools
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockCorpora
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockPredictions
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockMetrics
+        });
+
+      const { result } = renderHook(() => useEvaluationPreload());
+
+      // Wait for initial data
+      await waitFor(() => {
+        expect(result.current.tools).toEqual(mockTools);
+        expect(result.current.corpora).toEqual(mockCorpora);
+      });
+
+      // Trigger refresh
+      act(() => {
+        result.current.refreshData();
+      });
+
+      // Wait for refresh to complete
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Verify the refresh function was called
+      expect(typeof result.current.refreshData).toBe('function');
+    });
+
+    it('handles refresh with server errors and retry logic', async () => {
+      const mockTools = [{ id: 'tool1', name: 'Tool 1' }];
+      const mockCorpora = [{ name: 'corpus1', corpus_version: 'v1.0' }];
+      const mockPredictions = [{ id: 1 }];
+      const mockMetrics = [{ evaluation_result: { accuracy: 0.8 } }];
+
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockTools
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockCorpora
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockPredictions
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 500,
+          statusText: 'Internal Server Error'
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockMetrics
+        });
+
+      const { result } = renderHook(() => useEvaluationPreload());
+
+      await waitFor(() => {
+        expect(result.current.tools).toEqual(mockTools);
+        expect(result.current.corpora).toEqual(mockCorpora);
+      });
+
+      act(() => {
+        result.current.refreshData();
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Should handle retry gracefully
+      expect(result.current.error).toBe('');
+    });
+
+    it('handles refresh debouncing correctly', async () => {
+      const mockTools = [{ id: 'tool1', name: 'Tool 1' }];
+      const mockCorpora = [{ name: 'corpus1', corpus_version: 'v1.0' }];
+
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockTools
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockCorpora
+        });
+
+      const { result } = renderHook(() => useEvaluationPreload());
+
+      await waitFor(() => {
+        expect(result.current.tools).toEqual(mockTools);
+        expect(result.current.corpora).toEqual(mockCorpora);
+      });
+
+      // Make rapid successive refresh calls
+      act(() => {
+        result.current.refreshData();
+        result.current.refreshData();
+        result.current.refreshData();
+      });
+
+      // Should handle debouncing gracefully
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+    });
+
+    it('handles refresh with timeout errors and recovery', async () => {
+      const mockTools = [{ id: 'tool1', name: 'Tool 1' }];
+      const mockCorpora = [{ name: 'corpus1', corpus_version: 'v1.0' }];
+      const mockPredictions = [{ id: 1 }];
+
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockTools
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockCorpora
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockPredictions
+        })
+        .mockRejectedValueOnce(new Error('timeout error'));
+
+      const { result } = renderHook(() => useEvaluationPreload());
+
+      await waitFor(() => {
+        expect(result.current.tools).toEqual(mockTools);
+        expect(result.current.corpora).toEqual(mockCorpora);
+      });
+
+      act(() => {
+        result.current.refreshData();
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Should handle timeout gracefully
+      expect(result.current.error).toBe('');
+    });
+
+    it('handles refresh with no predictions found', async () => {
+      const mockTools = [{ id: 'tool1', name: 'Tool 1' }];
+      const mockCorpora = [{ name: 'corpus1', corpus_version: 'v1.0' }];
+
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockTools
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockCorpora
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => [] // No predictions
+        });
+
+      const { result } = renderHook(() => useEvaluationPreload());
+
+      await waitFor(() => {
+        expect(result.current.tools).toEqual(mockTools);
+        expect(result.current.corpora).toEqual(mockCorpora);
+      });
+
+      act(() => {
+        result.current.refreshData();
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Should handle no predictions gracefully
+      expect(result.current.error).toBe('');
+    });
+
+    it('handles refresh cancellation during prediction checks', async () => {
+      const mockTools = [{ id: 'tool1', name: 'Tool 1' }];
+      const mockCorpora = [{ name: 'corpus1', corpus_version: 'v1.0' }];
+
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockTools
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockCorpora
+        });
+
+      const { result, unmount } = renderHook(() => useEvaluationPreload());
+
+      await waitFor(() => {
+        expect(result.current.tools).toEqual(mockTools);
+        expect(result.current.corpora).toEqual(mockCorpora);
+      });
+
+      act(() => {
+        result.current.refreshData();
+      });
+
+      // Unmount during refresh
+      unmount();
+
+      // Should not throw errors
+      expect(true).toBe(true);
+    });
+  });
+
+  describe('Real-world Scenarios Integration', () => {
+    it('handles realistic data flow with multiple tools and corpora', async () => {
+      const mockTools = [
+        { id: 'phenotagger', name: 'PhenoTagger' },
+        { id: 'phenobert', name: 'PhenoBERT' },
+        { id: 'gpt2', name: 'GPT-2' }
+      ];
+      const mockCorpora = [
+        { name: 'gold_corpus', corpus_version: 'v1.0' },
+        { name: 'gold_corpus_small', corpus_version: 'v2.0' }
+      ];
+
+      // Mock responses for all tool-corpus combinations
+      const mockResponses = [];
+      
+      // Initial tools and corpora
+      mockResponses.push(
+        { ok: true, headers: { get: () => 'application/json' }, json: async () => mockTools },
+        { ok: true, headers: { get: () => 'application/json' }, json: async () => mockCorpora }
+      );
+
+      // Mock metrics for each combination
+      for (let i = 0; i < 6; i++) {
+        mockResponses.push({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => [{ evaluation_result: { accuracy: 0.8 + (i * 0.02) } }]
+        });
+      }
+
+      global.fetch.mockImplementation(() => Promise.resolve(mockResponses.shift()));
+
+      const { result } = renderHook(() => useEvaluationPreload());
+
+      await waitFor(() => {
+        expect(result.current.tools).toEqual(mockTools);
+        expect(result.current.corpora).toEqual(mockCorpora);
+      });
+
+      act(() => {
+        result.current.fetchAllMetrics();
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Should have metrics for all combinations
+      expect(Object.keys(result.current.metricsData).length).toBeGreaterThan(0);
+    });
+
+    it('handles large dataset refresh with performance considerations', async () => {
+      const largeTools = Array.from({ length: 5 }, (_, i) => ({
+        id: `tool${i}`,
+        name: `Tool ${i}`
+      }));
+      const largeCorpora = Array.from({ length: 3 }, (_, i) => ({
+        name: `corpus${i}`,
+        corpus_version: `v${i}.0`
+      }));
+
+      // Mock responses for large dataset
+      const mockResponses = [];
+      
+      // Initial data
+      mockResponses.push(
+        { ok: true, headers: { get: () => 'application/json' }, json: async () => largeTools },
+        { ok: true, headers: { get: () => 'application/json' }, json: async () => largeCorpora }
+      );
+
+      // Mock predictions and metrics for each tool
+      for (let i = 0; i < 5; i++) {
+        mockResponses.push({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => [{ id: i }] // Predictions
+        });
+        mockResponses.push({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => [{ evaluation_result: { accuracy: 0.8 } }] // Metrics
+        });
+      }
+
+      global.fetch.mockImplementation(() => Promise.resolve(mockResponses.shift()));
+
+      const { result } = renderHook(() => useEvaluationPreload());
+
+      await waitFor(() => {
+        expect(result.current.tools).toEqual(largeTools);
+        expect(result.current.corpora).toEqual(largeCorpora);
+      });
+
+      act(() => {
+        result.current.refreshData();
+      });
+
+      // Should handle large datasets efficiently
+      expect(result.current.tools).toHaveLength(5);
+      expect(result.current.corpora).toHaveLength(3);
+    });
+
+    it('handles mixed success/failure scenarios realistically', async () => {
+      const mockTools = [
+        { id: 'tool1', name: 'Tool 1' },
+        { id: 'tool2', name: 'Tool 2' },
+        { id: 'tool3', name: 'Tool 3' }
+      ];
+      const mockCorpora = [{ name: 'corpus1', corpus_version: 'v1.0' }];
+
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockTools
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockCorpora
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => [{ id: 1 }] // Tool 1 has predictions
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 404
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => [] // Tool 3 has no predictions
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => [{ evaluation_result: { accuracy: 0.8 } }] // Tool 1 metrics
+        });
+
+      const { result } = renderHook(() => useEvaluationPreload());
+
+      await waitFor(() => {
+        expect(result.current.tools).toEqual(mockTools);
+        expect(result.current.corpora).toEqual(mockCorpora);
+      });
+
+      act(() => {
+        result.current.refreshData();
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Should handle mixed scenarios gracefully
+      expect(result.current.error).toBe('');
+    });
+  });
+
+  describe('Error Recovery and Resilience Integration', () => {
+    it('recovers from network failures and allows retry', async () => {
+      const mockTools = [{ id: 'tool1', name: 'Tool 1' }];
+      const mockCorpora = [{ name: 'corpus1', corpus_version: 'v1.0' }];
+
+      // Mock initial failure, then success
+      global.fetch
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockTools
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockCorpora
+        });
+
+      const { result } = renderHook(() => useEvaluationPreload());
+
+      // Should handle initial failure
+      await waitFor(() => {
+        expect(result.current.error).toContain('Network error');
+      });
+
+      // Clear error and retry
+      act(() => {
+        result.current.clearError();
+      });
+
+      // Should be able to retry
+      expect(typeof result.current.fetchAllMetrics).toBe('function');
+      expect(typeof result.current.clearError).toBe('function');
+    });
+
+    it('handles cascading failures gracefully', async () => {
+      // Mock tools success, corpora failure, then recovery
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => [{ id: 'tool1', name: 'Tool 1' }]
+        })
+        .mockRejectedValueOnce(new Error('Corpora fetch failed'))
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => [{ name: 'corpus1', corpus_version: 'v1.0' }]
+        });
+
+      const { result } = renderHook(() => useEvaluationPreload());
+
+      // Should handle partial failure
+      await waitFor(() => {
+        expect(result.current.tools).toHaveLength(1);
+        expect(result.current.error).toContain('Corpora fetch failed');
+      });
+
+      // Should still be functional for retry
+      expect(typeof result.current.fetchAllMetrics).toBe('function');
+      expect(typeof result.current.clearError).toBe('function');
+    });
+
+    it('maintains state consistency during error conditions', async () => {
+      const mockTools = [{ id: 'tool1', name: 'Tool 1' }];
+      const mockCorpora = [{ name: 'corpus1', corpus_version: 'v1.0' }];
+
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockTools
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockCorpora
+        })
+        .mockRejectedValueOnce(new Error('Metrics fetch failed'));
+
+      const { result } = renderHook(() => useEvaluationPreload());
+
+      await waitFor(() => {
+        expect(result.current.tools).toEqual(mockTools);
+        expect(result.current.corpora).toEqual(mockCorpora);
+      });
+
+      // Trigger metrics fetch that fails
+      act(() => {
+        result.current.fetchAllMetrics();
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Should maintain existing data even after error
+      expect(result.current.tools).toEqual(mockTools);
+      expect(result.current.corpora).toEqual(mockCorpora);
+      expect(result.current.metricsData).toEqual({});
+    });
+
+    it('handles memory pressure and cleanup correctly', async () => {
+      const mockTools = [{ id: 'tool1', name: 'Tool 1' }];
+      const mockCorpora = [{ name: 'corpus1', corpus_version: 'v1.0' }];
+
+      global.fetch
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockTools
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => mockCorpora
+        });
+
+      const { result, unmount } = renderHook(() => useEvaluationPreload());
+
+      await waitFor(() => {
+        expect(result.current.tools).toEqual(mockTools);
+        expect(result.current.corpora).toEqual(mockCorpora);
+      });
+
+      // Start multiple operations
+      act(() => {
+        result.current.fetchAllMetrics();
+        result.current.refreshData();
+      });
+
+      // Unmount during operations
+      unmount();
+
+      // Should not leak memory or throw errors
+      expect(true).toBe(true);
+    });
+  });
 }); 

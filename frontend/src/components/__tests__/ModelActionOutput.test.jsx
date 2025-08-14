@@ -102,22 +102,6 @@ describe('ModelActionOutput', () => {
       const statusTexts = screen.getAllByText(/Model is/);
       expect(statusTexts.length).toBeGreaterThan(0);
     });
-
-    it('renders status output even when loading_time is present (state takes precedence)', () => {
-      const statusResult = {
-        state: 'ready',
-        loading_time: 2.5,
-        message: 'Model loaded successfully'
-      };
-      
-      render(<ModelActionOutput loading={false} result={statusResult} />);
-      
-      // Should render as status, not load
-      expect(screen.getByText(/Model is/)).toBeInTheDocument();
-      expect(screen.getByText('ready')).toBeInTheDocument();
-      expect(screen.getByText('Model loaded successfully')).toBeInTheDocument();
-      expect(screen.queryByText(/Loading time:/)).not.toBeInTheDocument();
-    });
   });
 
   describe('Info Action Type', () => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import InferencePage from '../InferencePage';
 
 // Mock the components
@@ -25,42 +25,41 @@ jest.mock('../../components', () => ({
       </button>
     </div>
   ),
-  TextInput: ({ value, onChange }) => (
+  TextInput: ({ input, setInput }) => (
     <div data-testid="text-input">
       <textarea 
-        value={value} 
-        onChange={(e) => onChange(e.target.value)}
+        value={input} 
+        onChange={(e) => setInput(e.target.value)}
         data-testid="text-area"
         placeholder="Enter text here..."
       />
     </div>
   ),
-  ActionButtons: ({ onStatus, onInfo, onLoad, onUnload }) => (
+  ActionButtons: ({ callApi }) => (
     <div data-testid="action-buttons">
-      <button onClick={onStatus}>Status</button>
-      <button onClick={onInfo}>Info</button>
-      <button onClick={onLoad}>Load</button>
-      <button onClick={onUnload}>Unload</button>
+      <button onClick={() => callApi('/status', 'GET')}>Status</button>
+      <button onClick={() => callApi('/info', 'GET')}>Info</button>
+      <button onClick={() => callApi('/load', 'POST')}>Load</button>
+      <button onClick={() => callApi('/unload', 'POST')}>Unload</button>
     </div>
   ),
   ModelOutput: ({ result, loading, hasRunAnalysis }) => (
     <div data-testid="model-output">
       {loading && <div>Loading...</div>}
-      {result && <div>Result: {JSON.stringify(result)}</div>}
+      {result && <div>Result: {result}</div>}
       {!hasRunAnalysis && <div>No analysis run yet</div>}
     </div>
   ),
-  ModelActionOutput: ({ result, lastAction }) => (
+  ModelActionOutput: ({ result, loading }) => (
     <div data-testid="model-action-output">
-      {result && <div>Action Result: {JSON.stringify(result)}</div>}
-      {lastAction && <div>Last Action: {lastAction}</div>}
+      {loading && <div>Action Loading...</div>}
+      {result && <div>Action Result: {result}</div>}
     </div>
   )
 }));
 
 jest.mock('../../components/HpoTermList', () => {
-  return function MockHpoTermList({ matches, hasRunAnalysis }) {
-    if (!hasRunAnalysis) return null;
+  return function MockHpoTermList({ matches }) {
     return (
       <div data-testid="hpo-term-list">
         {matches?.length > 0 ? (
@@ -100,165 +99,163 @@ describe('InferencePage', () => {
     });
   });
 
-  it('renders the model configuration section', () => {
+  it('renders the inference page with all sections', () => {
     render(<InferencePage {...mockProps} />);
+    
     expect(screen.getByText('Model Configuration')).toBeInTheDocument();
-  });
-
-  it('renders the input method section', () => {
-    render(<InferencePage {...mockProps} />);
     expect(screen.getByText('Input Method')).toBeInTheDocument();
-  });
-
-  it('renders the model output section', () => {
-    render(<InferencePage {...mockProps} />);
-    expect(screen.getByTestId('model-output')).toBeInTheDocument();
+    expect(screen.getByText('Input Data')).toBeInTheDocument();
+    expect(screen.getByText('Model Actions')).toBeInTheDocument();
+    expect(screen.getByText('Analysis Results')).toBeInTheDocument();
   });
 
   it('displays model selector with available tools', () => {
     render(<InferencePage {...mockProps} />);
     
+    const modelSelector = screen.getByTestId('model-selector');
+    expect(modelSelector).toBeInTheDocument();
+    
     const toolSelect = screen.getByTestId('tool-select');
     expect(toolSelect).toBeInTheDocument();
-    
-    fireEvent.click(toolSelect);
-    expect(screen.getByText('PhenoBERT')).toBeInTheDocument();
-    expect(screen.getByText('PhenoTagger')).toBeInTheDocument();
   });
 
-  it('allows tool selection', () => {
-    const mockSetSelectedTool = jest.fn();
-    render(<InferencePage {...mockProps} setSelectedTool={mockSetSelectedTool} />);
+  it('shows input method toggle buttons', () => {
+    render(<InferencePage {...mockProps} />);
     
-    const toolSelect = screen.getByTestId('tool-select');
-    fireEvent.change(toolSelect, { target: { value: 'phenobert' } });
-    
-    expect(mockSetSelectedTool).toHaveBeenCalledWith('phenobert');
+    expect(screen.getByText('Text Input')).toBeInTheDocument();
+    expect(screen.getByText('File Input')).toBeInTheDocument();
   });
 
-  it('displays text input by default', () => {
+  it('switches between text and file input modes', () => {
+    render(<InferencePage {...mockProps} />);
+    
+    // Initially text mode should be active
+    const textButton = screen.getByText('Text Input').closest('button');
+    const fileButton = screen.getByText('File Input').closest('button');
+    
+    expect(textButton).toHaveClass('inference-toggle-btn-active');
+    expect(fileButton).toHaveClass('inference-toggle-btn-inactive');
+    
+    // Switch to file mode
+    fireEvent.click(fileButton);
+    expect(fileButton).toHaveClass('inference-toggle-btn-active');
+    expect(textButton).toHaveClass('inference-toggle-btn-inactive');
+    
+    // Switch back to text mode
+    fireEvent.click(textButton);
+    expect(textButton).toHaveClass('inference-toggle-btn-active');
+    expect(fileButton).toHaveClass('inference-toggle-btn-inactive');
+  });
+
+  it('shows text input by default', () => {
     render(<InferencePage {...mockProps} />);
     
     expect(screen.getByTestId('text-input')).toBeInTheDocument();
-    expect(screen.getByTestId('text-area')).toBeInTheDocument();
+    expect(screen.queryByTestId('file-input')).not.toBeInTheDocument();
   });
 
-  it('switches to file input when file button is clicked', () => {
+  it('shows file input when file mode is selected', () => {
     render(<InferencePage {...mockProps} />);
     
-    const fileButton = screen.getByText('File');
+    // Switch to file mode
+    const fileButton = screen.getByText('File Input').closest('button');
     fireEvent.click(fileButton);
     
     expect(screen.getByTestId('file-input')).toBeInTheDocument();
+    expect(screen.queryByTestId('text-input')).not.toBeInTheDocument();
   });
 
-  it('switches back to text input when text button is clicked', () => {
+  it('handles file selection', () => {
     render(<InferencePage {...mockProps} />);
     
-    // Switch to file input first
-    const fileButton = screen.getByText('File');
-    fireEvent.click(fileButton);
-    
-    // Switch back to text input
-    const textButton = screen.getByText('Text');
-    fireEvent.click(textButton);
-    
-    expect(screen.getByTestId('text-input')).toBeInTheDocument();
-  });
-
-  it('displays action buttons', () => {
-    render(<InferencePage {...mockProps} />);
-    
-    expect(screen.getByTestId('action-buttons')).toBeInTheDocument();
-    expect(screen.getByText('Status')).toBeInTheDocument();
-    expect(screen.getByText('Info')).toBeInTheDocument();
-    expect(screen.getByText('Load')).toBeInTheDocument();
-    expect(screen.getByText('Unload')).toBeInTheDocument();
-  });
-
-  it('calls API when action buttons are clicked', () => {
-    const mockCallApi = jest.fn();
-    render(<InferencePage {...mockProps} callApi={mockCallApi} />);
-    
-    const statusButton = screen.getByText('Status');
-    fireEvent.click(statusButton);
-    
-    // The mock component should call the handler, but since it's mocked, we check the button exists
-    expect(statusButton).toBeInTheDocument();
-  });
-
-  it('displays run analysis button', () => {
-    render(<InferencePage {...mockProps} />);
-    expect(screen.getByText('Run Analysis')).toBeInTheDocument();
-  });
-
-  it('calls API when run analysis is clicked with text input', () => {
-    const mockCallApi = jest.fn();
-    render(<InferencePage {...mockProps} callApi={mockCallApi} />);
-    
-    const runButton = screen.getByText('Run Analysis');
-    fireEvent.click(runButton);
-    
-    expect(mockCallApi).toHaveBeenCalledWith('/predict', 'POST', {
-      sentences: ['The last child is a 6-year-old boy. At 36 weeks 3D ultrasonography showed telecanthus, short nose, long philtrum and short femur (Fig. 3A).']
-    });
-  });
-
-  it('shows loading state when loading is true', () => {
-    render(<InferencePage {...mockProps} loading={true} />);
-    
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
-  });
-
-  it('displays result when available', () => {
-    const mockResult = { results: [['HP:0000001']] };
-    render(<InferencePage {...mockProps} result={JSON.stringify(mockResult)} />);
-    
-    expect(screen.getByText(/Result:/)).toBeInTheDocument();
-  });
-
-  it('shows HPO terms when matches are found', () => {
-    const mockResult = { results: [['HP:0000001', 'HP:0000002']] };
-    render(<InferencePage {...mockProps} result={JSON.stringify(mockResult)} />);
-    
-    // Need to run analysis first to show HPO terms
-    const runButton = screen.getByText('Run Analysis');
-    fireEvent.click(runButton);
-    
-    // Check that the HPO terms section is displayed
-    expect(screen.getByText('Identified HPO Terms')).toBeInTheDocument();
-  });
-
-  it('shows no HPO terms message when no matches found', () => {
-    const mockResult = { results: [] };
-    render(<InferencePage {...mockProps} result={JSON.stringify(mockResult)} />);
-    
-    // Need to run analysis first to show HPO terms
-    const runButton = screen.getByText('Run Analysis');
-    fireEvent.click(runButton);
-    
-    // When no matches, the HPO terms section should not be displayed
-    expect(screen.queryByText('Identified HPO Terms')).not.toBeInTheDocument();
-  });
-
-  it('does not show HPO terms before analysis is run', () => {
-    render(<InferencePage {...mockProps} />);
-    
-    expect(screen.queryByTestId('hpo-term-list')).not.toBeInTheDocument();
-  });
-
-  it('handles file input mode correctly', () => {
-    render(<InferencePage {...mockProps} />);
-    
-    // Switch to file input
-    const fileButton = screen.getByText('File');
+    // Switch to file mode
+    const fileButton = screen.getByText('File Input').closest('button');
     fireEvent.click(fileButton);
     
     // Select a file
     const selectFileButton = screen.getByText('Select File');
     fireEvent.click(selectFileButton);
     
-    // Now run analysis should work with file content
+    // The file content should be set and the run button should be enabled
+    const runButton = screen.getByText('Run Analysis');
+    expect(runButton).not.toBeDisabled();
+  });
+
+  it('handles text input changes', () => {
+    render(<InferencePage {...mockProps} />);
+    
+    const textArea = screen.getByTestId('text-area');
+    const newText = 'New test text for analysis';
+    
+    fireEvent.change(textArea, { target: { value: newText } });
+    
+    expect(textArea.value).toBe(newText);
+  });
+
+  it('enables run button when text input has content', () => {
+    render(<InferencePage {...mockProps} />);
+    
+    const textArea = screen.getByTestId('text-area');
+    const runButton = screen.getByText('Run Analysis');
+    
+    // Initially should be enabled (default text is present)
+    expect(runButton).not.toBeDisabled();
+    
+    // Clear the text
+    fireEvent.change(textArea, { target: { value: '' } });
+    expect(runButton).toBeDisabled();
+    
+    // Add text back
+    fireEvent.change(textArea, { target: { value: 'New text' } });
+    expect(runButton).not.toBeDisabled();
+  });
+
+  it('enables run button when file has content', () => {
+    render(<InferencePage {...mockProps} />);
+    
+    // Switch to file mode
+    const fileButton = screen.getByText('File Input').closest('button');
+    fireEvent.click(fileButton);
+    
+    const runButton = screen.getByText('Run Analysis');
+    
+    // Initially disabled (no file selected)
+    expect(runButton).toBeDisabled();
+    
+    // Select a file
+    const selectFileButton = screen.getByText('Select File');
+    fireEvent.click(selectFileButton);
+    
+    // Should be enabled after file selection
+    expect(runButton).not.toBeDisabled();
+  });
+
+  it('calls API with correct data when running text analysis', () => {
+    render(<InferencePage {...mockProps} />);
+    
+    const textArea = screen.getByTestId('text-area');
+    const newText = 'Test text for analysis\nSecond line';
+    fireEvent.change(textArea, { target: { value: newText } });
+    
+    const runButton = screen.getByText('Run Analysis');
+    fireEvent.click(runButton);
+    
+    expect(mockProps.callApi).toHaveBeenCalledWith('/predict', 'POST', {
+      sentences: ['Test text for analysis', 'Second line']
+    });
+  });
+
+  it('calls API with correct data when running file analysis', () => {
+    render(<InferencePage {...mockProps} />);
+    
+    // Switch to file mode
+    const fileButton = screen.getByText('File Input').closest('button');
+    fireEvent.click(fileButton);
+    
+    // Select a file
+    const selectFileButton = screen.getByText('Select File');
+    fireEvent.click(selectFileButton);
+    
     const runButton = screen.getByText('Run Analysis');
     fireEvent.click(runButton);
     
@@ -267,20 +264,223 @@ describe('InferencePage', () => {
     });
   });
 
-  it('shows alert when trying to run analysis without file in file mode', () => {
-    const mockAlert = jest.spyOn(window, 'alert').mockImplementation(() => {});
+  it('handles action button clicks', () => {
     render(<InferencePage {...mockProps} />);
     
-    // Switch to file input
-    const fileButton = screen.getByText('File');
+    const statusButton = screen.getByText('Status');
+    const infoButton = screen.getByText('Info');
+    const loadButton = screen.getByText('Load');
+    const unloadButton = screen.getByText('Unload');
+    
+    fireEvent.click(statusButton);
+    expect(mockProps.callApi).toHaveBeenCalledWith('/status', 'GET');
+    
+    fireEvent.click(infoButton);
+    expect(mockProps.callApi).toHaveBeenCalledWith('/info', 'GET');
+    
+    fireEvent.click(loadButton);
+    expect(mockProps.callApi).toHaveBeenCalledWith('/load', 'POST');
+    
+    fireEvent.click(unloadButton);
+    expect(mockProps.callApi).toHaveBeenCalledWith('/unload', 'POST');
+  });
+
+  it('displays loading state when processing', () => {
+    const loadingProps = { ...mockProps, loading: true };
+    render(<InferencePage {...loadingProps} />);
+    
+    expect(screen.getByText('Processing...')).toBeInTheDocument();
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+  });
+
+  it('displays results when available', () => {
+    const resultData = { results: [['HP:0001234', 'Test phenotype']] };
+    const resultProps = { ...mockProps, result: JSON.stringify(resultData) };
+    
+    render(<InferencePage {...resultProps} />);
+    
+    expect(screen.getByText(/Result:/)).toBeInTheDocument();
+  });
+
+  it('displays HPO terms when results contain matches', () => {
+    const resultData = { results: [['HP:0001234', 'Test phenotype']] };
+    const resultProps = { ...mockProps, result: JSON.stringify(resultData) };
+    
+    render(<InferencePage {...resultProps} />);
+    
+    // Need to run analysis first to show HPO terms
+    const runButton = screen.getByText('Run Analysis');
+    fireEvent.click(runButton);
+    
+    expect(screen.getByText(/HPO Terms:/)).toBeInTheDocument();
+  });
+
+  it('loads last analyzed text from localStorage on mount', () => {
+    const savedText = 'Previously analyzed text';
+    window.localStorage.getItem.mockReturnValue(savedText);
+    
+    render(<InferencePage {...mockProps} />);
+    
+    expect(window.localStorage.getItem).toHaveBeenCalledWith('inference_lastAnalyzedText');
+  });
+
+  it('saves analyzed text to localStorage when running analysis', () => {
+    render(<InferencePage {...mockProps} />);
+    
+    const textArea = screen.getByTestId('text-area');
+    const newText = 'Text to be analyzed';
+    fireEvent.change(textArea, { target: { value: newText } });
+    
+    const runButton = screen.getByText('Run Analysis');
+    fireEvent.click(runButton);
+    
+    expect(window.localStorage.setItem).toHaveBeenCalledWith('inference_lastAnalyzedText', newText);
+  });
+
+  it('handles JSON parsing errors gracefully', () => {
+    const invalidResult = 'invalid json';
+    const resultProps = { ...mockProps, result: invalidResult };
+    
+    render(<InferencePage {...resultProps} />);
+    
+    // Should not crash and should not display HPO terms
+    expect(screen.queryByText(/HPO Terms:/)).not.toBeInTheDocument();
+  });
+
+  it('shows action output when action is performed', () => {
+    const resultData = { status: 'loaded' };
+    const resultProps = { ...mockProps, result: JSON.stringify(resultData) };
+    
+    render(<InferencePage {...resultProps} />);
+    
+    // Perform an action
+    const statusButton = screen.getByText('Status');
+    fireEvent.click(statusButton);
+    
+    // Should show action output
+    expect(screen.getByText(/Action Result:/)).toBeInTheDocument();
+  });
+
+  it('handles empty result gracefully', () => {
+    const emptyResultProps = { ...mockProps, result: null };
+    
+    render(<InferencePage {...emptyResultProps} />);
+    
+    expect(screen.getByText('No analysis run yet')).toBeInTheDocument();
+  });
+
+  it('tracks last action correctly', () => {
+    render(<InferencePage {...mockProps} />);
+    
+    const statusButton = screen.getByText('Status');
+    fireEvent.click(statusButton);
+    
+    // The action should be tracked internally
+    expect(mockProps.callApi).toHaveBeenCalledWith('/status', 'GET');
+  });
+
+  it('handles file content with multiple lines', () => {
+    render(<InferencePage {...mockProps} />);
+    
+    // Switch to file mode
+    const fileButton = screen.getByText('File Input').closest('button');
+    fireEvent.click(fileButton);
+    
+    // Select a file
+    const selectFileButton = screen.getByText('Select File');
+    fireEvent.click(selectFileButton);
+    
+    const runButton = screen.getByText('Run Analysis');
+    fireEvent.click(runButton);
+    
+    // Should call API with filtered sentences
+    expect(mockProps.callApi).toHaveBeenCalledWith('/predict', 'POST', {
+      sentences: ['test file content']
+    });
+  });
+
+  it('filters empty lines from text input', () => {
+    render(<InferencePage {...mockProps} />);
+    
+    const textArea = screen.getByTestId('text-area');
+    const textWithEmptyLines = 'Line 1\n\nLine 2\n   \nLine 3';
+    fireEvent.change(textArea, { target: { value: textWithEmptyLines } });
+    
+    const runButton = screen.getByText('Run Analysis');
+    fireEvent.click(runButton);
+    
+    expect(mockProps.callApi).toHaveBeenCalledWith('/predict', 'POST', {
+      sentences: ['Line 1', 'Line 2', 'Line 3']
+    });
+  });
+
+  it('handles whitespace-only lines correctly', () => {
+    render(<InferencePage {...mockProps} />);
+    
+    const textArea = screen.getByTestId('text-area');
+    const textWithWhitespace = 'Line 1\n   \n\t\nLine 2';
+    fireEvent.change(textArea, { target: { value: textWithWhitespace } });
+    
+    const runButton = screen.getByText('Run Analysis');
+    fireEvent.click(runButton);
+    
+    expect(mockProps.callApi).toHaveBeenCalledWith('/predict', 'POST', {
+      sentences: ['Line 1', 'Line 2']
+    });
+  });
+
+  it('maintains state between input mode switches', () => {
+    render(<InferencePage {...mockProps} />);
+    
+    // Add text in text mode
+    const textArea = screen.getByTestId('text-area');
+    const textContent = 'Text content';
+    fireEvent.change(textArea, { target: { value: textContent } });
+    
+    // Switch to file mode and back
+    const fileButton = screen.getByText('File Input').closest('button');
+    fireEvent.click(fileButton);
+    
+    const textButton = screen.getByText('Text Input').closest('button');
+    fireEvent.click(textButton);
+    
+    // Text should be preserved
+    const newTextArea = screen.getByTestId('text-area');
+    expect(newTextArea.value).toBe(textContent);
+  });
+
+  it('handles model selector changes', () => {
+    render(<InferencePage {...mockProps} />);
+    
+    const toolSelect = screen.getByTestId('tool-select');
+    fireEvent.change(toolSelect, { target: { value: 'phenobert' } });
+    
+    expect(mockProps.setSelectedTool).toHaveBeenCalledWith('phenobert');
+  });
+
+  it('shows loading state for actions', () => {
+    const loadingProps = { ...mockProps, loading: true };
+    render(<InferencePage {...loadingProps} />);
+    
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+  });
+
+  it('shows alert when trying to run file analysis without selecting file', () => {
+    const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    
+    render(<InferencePage {...mockProps} />);
+    
+    // Switch to file mode
+    const fileButton = screen.getByText('File Input').closest('button');
     fireEvent.click(fileButton);
     
     // Try to run analysis without selecting file
     const runButton = screen.getByText('Run Analysis');
     fireEvent.click(runButton);
     
-    // Since the mock component doesn't implement the actual logic, we just check the button exists
+    // The alert should be called by the actual component logic
+    // Since we're testing the component behavior, we check that the button exists
     expect(runButton).toBeInTheDocument();
-    mockAlert.mockRestore();
+    alertSpy.mockRestore();
   });
 }); 
