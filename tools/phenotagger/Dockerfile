@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
     clang \
     make \
-    openjdk-17-jdk
+    default-jdk
 
 COPY tools/phenotagger/externals/ /app/tools/phenotagger/externals/
 
