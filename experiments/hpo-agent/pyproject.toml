@@ -1,0 +1,15 @@
+[project]
+name = "hpo-agent-experiment"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "google-genai>=1.31.0",
+    "pyhpo>=4.0.0",
+    "qdrant-client>=1.15.1",
+    "sentence-transformers==5.0.0",
+    "transformers==4.53.3",
+    "torch>=2.8.0",
+    "tqdm>=4.67.1",
+]
