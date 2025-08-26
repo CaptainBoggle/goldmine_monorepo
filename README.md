@@ -49,6 +49,9 @@ git submodule update --init --recursive
 git lfs pull
 ```
 
+## IMPORTANT!
+You will need to unzip the file at `tools/hpo-agent/hpo_vector_db/collection/hpo_2024-04-19/storage.sqlite.zip` before hpo-agent will function.
+
 ## Adding a New Git Submodule
 Use submodules only for external code such as tool sources or corpora that you want to track as part of the repository.
 ```bash
